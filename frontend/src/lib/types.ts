@@ -264,6 +264,29 @@ export interface ModelArtifact {
 
 /* ── Trading / Subscriber types ─────────────────────────────────── */
 
+export interface TradingStep {
+  step: number;
+  name: string;
+  description: string;
+  result: Record<string, unknown>;
+}
+
+export interface AIExecutionDetails {
+  mode: "modal_ai";
+  deployed_job_id: number;
+  model_info: {
+    base_model: string;
+    eval_f1: number;
+    eval_accuracy: number;
+  };
+  signal: string;
+  confidence: number;
+  steps: TradingStep[];
+  headlines_analyzed: number;
+  metrics: Record<string, unknown>;
+  trades: Array<Record<string, unknown>>;
+}
+
 export interface TradeRecord2 {
   id: number;
   subscription_id: number;

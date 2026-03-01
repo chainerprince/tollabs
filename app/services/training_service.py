@@ -197,8 +197,16 @@ def submit_job(db: Session, user_id: int, data: dict) -> TrainingJob:
             db_factory=SessionLocal,
         )
     else:
-        # Real Modal dispatch (future)
-        raise NotImplementedError("Real Modal GPU training not yet wired.")
+        # Real Modal GPU dispatch
+        from app.services.modal_client import dispatch_modal_training
+
+        dispatch_modal_training(
+            job_id=job.id,
+            user_id=user_id,
+            base_model=data["base_model"],
+            dataset_filename=data["dataset_filename"],
+            config=config_dict,
+        )
 
     return job
 
@@ -258,3 +266,30 @@ def list_user_artifacts(user_id: int) -> list[dict]:
             "modified": datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc).isoformat(),
         })
     return artifacts
+
+
+def seed_demo_dataset(user_id: int) -> dict:
+    """Copy the built-in financial sentiment CSV into the user's workspace."""
+    import shutil
+
+    source = Path(__file__).resolve().parent.parent / "data" / "financial_sentiment_demo.csv"
+    if not source.exists():
+        raise FileNotFoundError("Demo dataset not found in app/data/")
+
+    workspace = WORKSPACE_ROOT / str(user_id)
+    workspace.mkdir(parents=True, exist_ok=True)
+
+    dest = workspace / "financial_sentiment_demo.csv"
+    shutil.copy2(source, dest)
+
+    # Count rows for info
+    lines = dest.read_text().strip().split("\n")
+    num_rows = len(lines) - 1  # subtract header
+
+    return {
+        "message": f"Demo dataset seeded: {num_rows} samples",
+        "filename": "financial_sentiment_demo.csv",
+        "rows": num_rows,
+        "columns": ["text", "label"],
+        "labels": ["bullish", "bearish", "neutral"],
+    }

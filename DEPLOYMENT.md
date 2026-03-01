@@ -1,6 +1,27 @@
 # TOLLABS — Deployment Guide
 
-> Deploy the backend to **Railway** and the frontend to **Vercel** from a **single GitHub monorepo**.
+> Deploy the backend to **Render** (or Railway) and the frontend to **Vercel** from a **single GitHub monorepo**.  
+> Real GPU training runs on **Modal.com** — your server just calls it remotely.
+
+---
+
+## Architecture on Render
+
+```
+┌─────────────────┐       ┌──────────────────┐       ┌─────────────────┐
+│  Vercel          │       │  Render           │       │  Modal.com      │
+│  (Next.js)       │──────▶│  (FastAPI)        │──────▶│  (T4 GPU)       │
+│                  │  API  │                   │ remote│                 │
+│  Frontend        │ calls │  Backend          │ calls │  Training +     │
+│  Static + SSR    │       │  REST API + DB    │       │  Inference      │
+└─────────────────┘       └──────────────────┘       └─────────────────┘
+                                │
+                                │ env vars:
+                                │ MODAL_TOKEN_ID
+                                │ MODAL_TOKEN_SECRET
+```
+
+**Key insight:** Modal functions run on Modal's GPUs, not on Render. Your Render server uses `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` env vars to authenticate and call Modal remotely. No interactive login needed.
 
 ---
 
@@ -34,10 +55,34 @@ Both services deploy from the **same repo** — Railway watches the root, Vercel
 | What | Where to get it |
 |:-----|:----------------|
 | GitHub account | [github.com](https://github.com) |
-| Railway account | [railway.app](https://railway.app) — free tier available |
+| Render account | [render.com](https://render.com) — free tier available |
 | Vercel account | [vercel.com](https://vercel.com) — free tier (Hobby) |
+| Modal account | [modal.com](https://modal.com) — $30 free credits |
 | Gemini API key | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) — free |
-| HuggingFace token (optional) | [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) |
+
+---
+
+## Step 0 — Deploy Modal Functions (one-time, from your laptop)
+
+Modal functions (GPU training + inference) run on **Modal's infrastructure**, not on Render. You deploy them once from your local machine:
+
+```bash
+# Install & authenticate Modal
+pip install modal
+modal token new          # opens browser to log in
+
+# Deploy the TOLLABS GPU functions
+cd tollabs
+modal deploy app/modal_app.py
+```
+
+Then get your token for Render:
+
+1. Go to **[modal.com/settings#tokens](https://modal.com/settings#tokens)**
+2. Click **"Create new token"**
+3. Copy the **Token ID** and **Token Secret**
+
+> You'll paste these into Render in Step 2. That's how Render authenticates with Modal — no interactive login, no copying tokens into containers.
 
 ---
 
@@ -61,84 +106,74 @@ Make sure `.env` is in your `.gitignore` (it already is). Never push secrets.
 
 ---
 
-## Step 2 — Deploy Backend on Railway
+## Step 2 — Deploy Backend on Render
 
-### 2.1 Create a new project
+### Option A: One-click deploy (recommended)
 
-1. Go to [railway.app/dashboard](https://railway.app/dashboard)
-2. Click **"New Project"** → **"Deploy from GitHub Repo"**
-3. Select your `tollabs` repository
-4. Railway will auto-detect the `Procfile` or `Dockerfile` at the repo root
+Click this button (after pushing to GitHub):
 
-### 2.2 Configure the root directory
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
 
-Railway deploys from the repo root by default — this is correct since `requirements.txt`, `Procfile`, and `app/` are all at the root. No changes needed.
+This uses the `render.yaml` blueprint in the repo root. It creates both services automatically.
 
-### 2.3 Set environment variables
+### Option B: Manual setup
 
-Go to your Railway service → **Variables** tab → add:
+#### 2.1 Create a Web Service
 
-| Variable | Value |
-|:---------|:------|
-| `DATABASE_URL` | `sqlite:///./tollabs.db` |
-| `SECRET_KEY` | Generate one: `python -c "import secrets; print(secrets.token_hex(32))"` |
-| `GEMINI_API_KEY` | Your Gemini API key |
-| `HUGGINGFACE_TOKEN` | Your HuggingFace token (optional) |
-| `USE_MOCK_STRIPE` | `True` |
-| `USE_MOCK_TRADING` | `True` |
-| `USE_MOCK_MODAL` | `True` |
-| `USE_MOCK_TRAINING` | `True` |
-| `PORT` | `8000` |
+1. Go to [render.com/dashboard](https://dashboard.render.com)
+2. Click **"New +"** → **"Web Service"**
+3. Connect your `tollabs` GitHub repository
+4. Configure:
 
-> **Note:** Railway auto-injects `$PORT`. The Procfile uses it: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+| Setting | Value |
+|:--------|:------|
+| **Name** | `tollabs-api` |
+| **Root Directory** | *(leave empty — repo root)* |
+| **Runtime** | `Python` |
+| **Build Command** | `pip install -r requirements.txt` |
+| **Start Command** | `python -m app.utils.seed && uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| **Plan** | Free |
 
-### 2.4 Deploy settings
+#### 2.2 Set environment variables
 
-In the Railway service **Settings** tab:
+Go to your Render service → **Environment** tab → add:
 
-- **Build Command:** *(leave empty — Railway uses Dockerfile or pip + Procfile)*
-- **Start Command:** *(auto-detected from Procfile)*
-- **Watch Paths:** Leave default (deploys on any push to `main`)
+| Variable | Value | Notes |
+|:---------|:------|:------|
+| `SECRET_KEY` | *(generate one)* | `python -c "import secrets; print(secrets.token_hex(32))"` |
+| `DATABASE_URL` | `sqlite:///./tollabs.db` | |
+| `GEMINI_API_KEY` | Your Gemini key | Required for AI features |
+| `MODAL_TOKEN_ID` | *(from Step 0)* | **This is how Render talks to Modal** |
+| `MODAL_TOKEN_SECRET` | *(from Step 0)* | **No interactive login needed** |
+| `USE_MOCK_STRIPE` | `True` | Wallet stays mocked |
+| `USE_MOCK_TRADING` | `False` | Real AI model for trades |
+| `USE_MOCK_MODAL` | `True` | Notebook execution mocked |
+| `USE_MOCK_TRAINING` | `False` | Real GPU training via Modal |
+| `PYTHON_VERSION` | `3.12.0` | |
 
-If Railway picks the Dockerfile over the Procfile and you want the simpler Procfile deploy:
+> **How does auth work?** The `modal` Python package automatically reads `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` from environment variables. When your Render server calls `modal.Function.from_name(...)`, it authenticates using these env vars. No browser login, no copying tokens into containers.
 
-1. Go to **Settings** → **Build** section
-2. Set **Builder** to `Nixpacks` (not Docker)
-3. Nixpacks auto-detects Python from `requirements.txt` and uses the `Procfile`
+#### 2.3 Add a disk (optional but recommended)
 
-### 2.5 Seed the database
+For SQLite persistence across deploys:
 
-After the first deploy succeeds, go to the Railway service and open the **terminal** or use the Railway CLI:
+1. Go to your service → **Disks** tab
+2. Add a disk:
+   - **Name:** `tollabs-data`
+   - **Mount Path:** `/app/data`
+   - **Size:** 1 GB
 
-```bash
-# Option A: Railway CLI
-railway run python -m app.utils.seed
+> Without a disk, SQLite resets on every deploy. For production, switch to PostgreSQL.
 
-# Option B: Add a one-time deploy command
-# In Railway Settings → Deploy → Custom Start Command (temporarily):
-python -m app.utils.seed && uvicorn app.main:app --host 0.0.0.0 --port $PORT
-# After the first deploy, revert to just the Procfile command.
-```
+#### 2.4 Get your backend URL
 
-### 2.6 Get your backend URL
-
-Once deployed, Railway gives you a public URL like:
-
-```
-https://tollabs-production.up.railway.app
-```
-
-Copy this — you'll need it for the frontend. Test it by visiting:
+Once deployed, Render gives you:
 
 ```
-https://tollabs-production.up.railway.app/docs
+https://tollabs-api.onrender.com
 ```
 
-You should see the Swagger UI with all 40+ endpoints.
-
-### 2.7 Generate a domain (optional)
-
-In Railway → **Settings** → **Networking** → **Generate Domain** or add a custom domain.
+Test it: `https://tollabs-api.onrender.com/docs` should show the Swagger UI.
 
 ---
 
@@ -171,7 +206,7 @@ In the Vercel project → **Settings** → **Environment Variables** → add:
 
 | Variable | Value |
 |:---------|:------|
-| `NEXT_PUBLIC_API_URL` | `https://tollabs-production.up.railway.app` ← your Railway URL |
+| `NEXT_PUBLIC_API_URL` | `https://tollabs-api.onrender.com` ← your Render URL |
 
 > **Critical:** This must be `NEXT_PUBLIC_` prefixed so Next.js exposes it to the browser. The API client in `src/lib/api.ts` reads it:
 > ```ts
@@ -190,7 +225,7 @@ The `frontend/vercel.json` has a rewrite rule. Update the backend URL:
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://tollabs-production.up.railway.app/:path*"
+      "destination": "https://tollabs-api.onrender.com/:path*"
     }
   ]
 }
@@ -222,7 +257,7 @@ https://tollabs.vercel.app
 
 ```bash
 # Backend
-curl https://tollabs-production.up.railway.app/health
+curl https://tollabs-api.onrender.com/health
 # → {"status":"ok"}
 
 # Frontend
@@ -259,30 +294,15 @@ For the hackathon demo, `"*"` is fine.
 
 ## Quick Reference
 
-### Railway CLI cheatsheet
+### Render CLI cheatsheet
 
 ```bash
-# Install
-npm install -g @railway/cli
+# Render doesn't have a CLI — use the web dashboard.
+# Or use the Render API: https://api.render.com/v1
 
-# Login
-railway login
-
-# Link to your project
-cd tollabs
-railway link
-
-# Deploy manually
-railway up
-
-# View logs
-railway logs
-
-# Run a one-off command
-railway run python -m app.utils.seed
-
-# Open the deployed app
-railway open
+# View logs: Render dashboard → your service → Logs tab
+# Restart: Render dashboard → your service → Manual Deploy → Deploy
+# Shell: Render dashboard → your service → Shell tab
 ```
 
 ### Vercel CLI cheatsheet
@@ -309,19 +329,20 @@ vercel env add NEXT_PUBLIC_API_URL
 
 ## Environment Variables Summary
 
-### Backend (Railway)
+### Backend (Render)
 
 | Variable | Required | Default | Notes |
 |:---------|:---------|:--------|:------|
 | `DATABASE_URL` | No | `sqlite:///./tollabs.db` | Use PostgreSQL for production |
 | `SECRET_KEY` | **Yes** | Insecure default | Generate a real secret |
 | `GEMINI_API_KEY` | **Yes** | Empty | Required for AI features |
-| `HUGGINGFACE_TOKEN` | No | Empty | Only for model downloads |
-| `USE_MOCK_STRIPE` | No | `True` | Keep `True` for demo |
-| `USE_MOCK_TRADING` | No | `True` | Keep `True` for demo |
-| `USE_MOCK_MODAL` | No | `True` | Keep `True` for demo |
-| `USE_MOCK_TRAINING` | No | `True` | Keep `True` for demo |
-| `PORT` | Auto | Set by Railway | Don't override manually |
+| `MODAL_TOKEN_ID` | **Yes** | Empty | From modal.com/settings#tokens |
+| `MODAL_TOKEN_SECRET` | **Yes** | Empty | From modal.com/settings#tokens |
+| `USE_MOCK_STRIPE` | No | `True` | Keep `True` (wallet mocked) |
+| `USE_MOCK_TRADING` | No | `False` | `False` = real AI model inference |
+| `USE_MOCK_MODAL` | No | `True` | Notebook execution mocked |
+| `USE_MOCK_TRAINING` | No | `False` | `False` = real Modal GPU training |
+| `PORT` | Auto | Set by Render | Don't override manually |
 
 ### Frontend (Vercel)
 
@@ -333,29 +354,32 @@ vercel env add NEXT_PUBLIC_API_URL
 
 ## Troubleshooting
 
-### "Module not found" on Railway
-Railway's Nixpacks builder auto-detects Python. If it fails, ensure `requirements.txt` is at the repo root (not inside `frontend/`).
+### "Module not found" on Render
+Ensure `requirements.txt` is at the repo root (not inside `frontend/`) and `PYTHON_VERSION=3.12.0` is set.
 
 ### Frontend shows "Loading…" forever
 The API calls are failing. Check:
 1. `NEXT_PUBLIC_API_URL` is set correctly in Vercel env vars (no trailing slash)
-2. The Railway backend is running (`/health` returns `ok`)
+2. The Render backend is running (`/health` returns `ok`)
 3. CORS is configured (`allow_origins=["*"]`)
 
-### "SQLite database is locked" on Railway
-SQLite works fine for demo. If you get locking errors under load, switch to PostgreSQL:
-1. Add a PostgreSQL plugin in Railway
-2. Set `DATABASE_URL` to the Railway-provided Postgres connection string
-3. SQLAlchemy handles the switch automatically
+### Modal training fails with "Token missing"
+Your `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` are missing or wrong on Render. Go to:
+1. [modal.com/settings#tokens](https://modal.com/settings#tokens) → create a new token
+2. Render dashboard → your service → Environment → paste both values
+3. Re-deploy
+
+### "SQLite database is locked" on Render
+SQLite works fine for demo. For production, use Render's managed PostgreSQL.
 
 ### Vercel build fails
-Make sure the **Root Directory** in Vercel is set to `frontend`. If Vercel tries to build from the repo root, it won't find `package.json`.
+Make sure the **Root Directory** in Vercel is set to `frontend`.
 
-### Seed data missing after Railway redeploy
-Railway's filesystem is ephemeral — SQLite data resets on each deploy. Options:
-1. Add seed to the start command: `python -m app.utils.seed && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-2. Use Railway's persistent volume (attach a volume to `/app`)
-3. Switch to PostgreSQL (data persists across deploys)
+### Seed data missing after Render redeploy
+Render's filesystem is ephemeral — SQLite data resets on each deploy. Options:
+1. The start command already includes `python -m app.utils.seed` (auto-seeds on boot)
+2. Add a Render disk (mount at `/app/data`)
+3. Switch to PostgreSQL
 
 ---
 
@@ -363,11 +387,12 @@ Railway's filesystem is ephemeral — SQLite data resets on each deploy. Options
 
 For a hackathon demo, the above is sufficient. For a production deployment:
 
-- [ ] Replace SQLite with PostgreSQL (Railway has a one-click Postgres plugin)
+- [ ] Replace SQLite with PostgreSQL (Render has managed Postgres)
 - [ ] Set a real `SECRET_KEY` (never use the default)
 - [ ] Restrict CORS to your Vercel domain
-- [ ] Add a Railway persistent volume for file uploads
-- [ ] Set `USE_MOCK_*` flags to `False` and connect real services
-- [ ] Add a custom domain on both Railway and Vercel
+- [ ] Add a Render disk for persistent storage
+- [ ] Verify `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` are set
+- [ ] Deploy Modal app: `modal deploy app/modal_app.py`
+- [ ] Add a custom domain on both Render and Vercel
 - [ ] Enable Vercel Analytics for frontend monitoring
-- [ ] Set up Railway health checks pointing to `/health`
+- [ ] Set up Render health checks pointing to `/health`

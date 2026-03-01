@@ -1,0 +1,58 @@
+# ──────────────────────────────────────────────
+#  TOLLABS — Render.com Blueprint
+#  One-click deploy: https://render.com/deploy
+# ──────────────────────────────────────────────
+
+services:
+  # ── Backend (FastAPI) ────────────────────────
+  - type: web
+    name: tollabs-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m app.utils.seed && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite:///./tollabs.db
+      - key: GEMINI_API_KEY
+        sync: false            # user must set manually
+      - key: MODAL_TOKEN_ID
+        sync: false            # from modal.com/settings#tokens
+      - key: MODAL_TOKEN_SECRET
+        sync: false            # from modal.com/settings#tokens
+      - key: USE_MOCK_STRIPE
+        value: "True"
+      - key: USE_MOCK_TRADING
+        value: "False"
+      - key: USE_MOCK_MODAL
+        value: "True"
+      - key: USE_MOCK_TRAINING
+        value: "False"
+      - key: HUGGINGFACE_TOKEN
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+    healthCheckPath: /health
+    plan: free
+    disk:
+      name: tollabs-data
+      mountPath: /app/data
+      sizeGB: 1
+
+  # ── Frontend (Next.js) ──────────────────────
+  - type: web
+    name: tollabs-frontend
+    runtime: node
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: tollabs-api
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: PORT
+        value: "3000"
+    plan: free

@@ -293,6 +293,12 @@ export const training = {
   listArtifacts() {
     return request<ModelArtifact[]>("/training/artifacts");
   },
+  seedDemoDataset() {
+    return request<{ message: string; filename: string; rows: number; columns: string[]; labels: string[] }>(
+      "/training/datasets/seed",
+      { method: "POST" },
+    );
+  },
 };
 
 /* ── Trading (Subscriber) ─────────────────────────────────────── */

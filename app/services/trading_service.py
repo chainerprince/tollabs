@@ -16,6 +16,29 @@ from app.models.user import User
 from app.mocks import mock_trading, mock_stripe
 
 
+def _get_deployed_model_job_id(db: Session, model) -> int | None:
+    """
+    Find the latest completed training job for this model's creator.
+
+    This links a TradingModel to a deployed fine-tuned model on Modal
+    by finding the most recent successful training job from the same researcher.
+    """
+    from app.models.training_job import TrainingJob
+
+    # Look for completed training jobs from this model's creator
+    job = (
+        db.query(TrainingJob)
+        .filter(
+            TrainingJob.user_id == model.creator_id,
+            TrainingJob.status == "completed",
+            TrainingJob.model_artifact_path.isnot(None),
+        )
+        .order_by(TrainingJob.completed_at.desc())
+        .first()
+    )
+    return job.id if job else None
+
+
 def fund_wallet(db: Session, user_id: int, amount: float) -> dict:
     """Add mock funds to a user's wallet balance."""
     if amount <= 0:
@@ -174,37 +197,104 @@ def execute_trade(db: Session, trade_id: int, user_id: int) -> Trade:
     trade.status = "executing"
     db.commit()
 
-    # Run the mock trading engine
-    strategy_code = trade.modified_code if trade.modified_code else model.strategy_code
-    cycle = mock_trading.run_single_model_cycle(
-        strategy_code=strategy_code,
-        asset=model.asset_class,
-        periods=200,
-    )
+    # Check if model has a deployed Modal model (from a completed training job)
+    deployed_job_id = _get_deployed_model_job_id(db, model)
 
-    trades_list = cycle["trades"]
-    metrics = cycle["metrics"]
+    if deployed_job_id and not settings.USE_MOCK_TRADING:
+        # ── Real Modal Multi-Step Trading ─────────────────────
+        from app.services.modal_client import get_trading_decision
+        from app.services.market_data import (
+            generate_market_headlines,
+            generate_simulated_trade_execution,
+        )
+        from app.mocks.mock_trading import generate_price_series
 
-    # Scale PnL to the capital amount
-    total_pnl_pct = metrics.get("total_return_pct", 0) / 100
-    actual_pnl = trade.capital * total_pnl_pct
+        # Generate simulated market data
+        price_data = generate_price_series(asset=model.asset_class, periods=50)
+        headlines = generate_market_headlines(asset=model.asset_class, count=8)
 
-    # Update trade record
-    trade.pnl = round(actual_pnl, 2)
-    trade.pnl_pct = round(total_pnl_pct * 100, 2)
-    trade.num_trades = metrics.get("num_trades", 0)
-    trade.execution_details = {
-        "metrics": metrics,
-        "num_simulated_trades": len(trades_list),
-        "sample_trades": trades_list[:5] if trades_list else [],
-    }
+        # Call the deployed model for multi-step decision
+        try:
+            decision = get_trading_decision(
+                job_id=deployed_job_id,
+                market_headlines=headlines,
+                price_data=price_data,
+                capital=trade.capital,
+                asset=model.asset_class,
+            )
+        except Exception as e:
+            # Fallback to mock if Modal inference fails
+            decision = {"error": str(e), "signal": "HOLD", "direction": "flat",
+                        "steps": [], "confidence": 0, "position_size": 0,
+                        "entry_price": price_data[-1]["close"] if price_data else 100.0}
 
-    if trades_list and trades_list[0].get("type") != "error":
-        trade.entry_price = trades_list[0].get("entry_price")
-        trade.exit_price = trades_list[-1].get("exit_price") if len(trades_list) > 0 else None
-        trade.direction = "long"  # default for mock
+        # Simulate the trade execution based on model's decision
+        cycle = generate_simulated_trade_execution(
+            decision=decision,
+            capital=trade.capital,
+            asset=model.asset_class,
+        )
+
+        trades_list = cycle["trades"]
+        metrics = cycle["metrics"]
+
+        # Scale PnL to capital
+        total_pnl_pct = metrics.get("total_return_pct", 0) / 100
+        actual_pnl = round(metrics.get("total_pnl", 0), 2)
+
+        # Update trade record with multi-step details
+        trade.pnl = actual_pnl
+        trade.pnl_pct = round(total_pnl_pct * 100, 2)
+        trade.num_trades = metrics.get("num_trades", 0)
+        trade.execution_details = {
+            "mode": "modal_ai",
+            "deployed_job_id": deployed_job_id,
+            "model_info": decision.get("model_info", {}),
+            "signal": decision.get("signal", "HOLD"),
+            "confidence": decision.get("confidence", 0),
+            "steps": decision.get("steps", []),
+            "headlines_analyzed": len(headlines),
+            "metrics": metrics,
+            "trades": trades_list,
+        }
+
+        if trades_list and trades_list[0].get("type") != "error":
+            trade.entry_price = trades_list[0].get("entry_price")
+            trade.exit_price = trades_list[0].get("exit_price")
+            trade.direction = decision.get("direction", "long")
+        else:
+            trade.direction = decision.get("direction", "flat")
     else:
-        trade.direction = "error"
+        # ── Mock Trading Engine (fallback) ────────────────────
+        strategy_code = trade.modified_code if trade.modified_code else model.strategy_code
+        cycle = mock_trading.run_single_model_cycle(
+            strategy_code=strategy_code,
+            asset=model.asset_class,
+            periods=200,
+        )
+
+        trades_list = cycle["trades"]
+        metrics = cycle["metrics"]
+
+        total_pnl_pct = metrics.get("total_return_pct", 0) / 100
+        actual_pnl = trade.capital * total_pnl_pct
+
+        trade.pnl = round(actual_pnl, 2)
+        trade.pnl_pct = round(total_pnl_pct * 100, 2)
+        trade.num_trades = metrics.get("num_trades", 0)
+        trade.execution_details = {
+            "mode": "mock",
+            "metrics": metrics,
+            "num_simulated_trades": len(trades_list),
+            "sample_trades": trades_list[:5] if trades_list else [],
+        }
+
+        if trades_list and trades_list[0].get("type") != "error":
+            trade.entry_price = trades_list[0].get("entry_price")
+            trade.exit_price = trades_list[-1].get("exit_price") if len(trades_list) > 0 else None
+            trade.direction = "long"
+        else:
+            trade.direction = "error"
 
     trade.status = "completed"
     trade.executed_at = datetime.now(timezone.utc)

@@ -18,6 +18,12 @@ TEST_DB_URL = f"sqlite:///{_tmp_db_path}"
 # Override before any app module reads the config
 os.environ["DATABASE_URL"] = TEST_DB_URL
 
+# Always use mocks in tests — no real GPU / Modal calls
+os.environ["USE_MOCK_TRAINING"] = "True"
+os.environ["USE_MOCK_TRADING"] = "True"
+os.environ["USE_MOCK_MODAL"] = "True"
+os.environ["USE_MOCK_STRIPE"] = "True"
+
 from app.database import Base, get_db
 from app.main import app
 

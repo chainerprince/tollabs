@@ -19,10 +19,10 @@ class Settings(BaseSettings):
     PLATFORM_COMMISSION: float = 0.10        # 10 %
 
     # ── Mock mode flags ───────────────────────────────────────
-    USE_MOCK_STRIPE: bool = True
-    USE_MOCK_TRADING: bool = True
-    USE_MOCK_MODAL: bool = True
-    USE_MOCK_TRAINING: bool = True
+    USE_MOCK_STRIPE: bool = True       # Keep wallet/payments mocked
+    USE_MOCK_TRADING: bool = False     # Use real Modal model for trade decisions
+    USE_MOCK_MODAL: bool = True        # Cloud notebook (compute) still mocked
+    USE_MOCK_TRAINING: bool = False    # Use real Modal GPU for training
 
     # ── Gemini AI ──────────────────────────────────────────────
     GEMINI_API_KEY: str = ""

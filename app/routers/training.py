@@ -103,6 +103,16 @@ def download_model(
     return {"message": f"Model {data.model_id} downloaded", **result}
 
 
+@router.post("/datasets/seed")
+def seed_demo_dataset(user=Depends(get_current_user)):
+    """
+    Copy the built-in financial sentiment demo dataset into the user's workspace.
+    This gives researchers a ready-to-use dataset for fine-tuning.
+    """
+    result = training_service.seed_demo_dataset(user.id)
+    return result
+
+
 # ── Artifacts ─────────────────────────────────────────────────────
 
 @router.get("/artifacts")
