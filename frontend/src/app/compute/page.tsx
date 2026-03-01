@@ -489,43 +489,45 @@ function EditorInner() {
             </div>
           </div>
 
-          {/* File preview banner */}
-          {previewFile && (
-            <div className="border-b border-white/[0.04] bg-[#0d0d14]">
-              <div className="flex items-center justify-between px-4 py-1.5">
-                <div className="flex items-center gap-2">
-                  <Icon name="visibility" className="text-cyan-400 text-sm" />
-                  <span className="text-[11px] text-slate-300 font-mono">
-                    {previewFile.name}
-                  </span>
+          {/* Cells */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
+            {/* File preview banner */}
+            {previewFile && (
+              <div className="rounded-lg border border-white/[0.04] bg-[#0d0d14] -mt-2 mb-3">
+                <div className="flex items-center justify-between px-4 py-1.5">
+                  <div className="flex items-center gap-2">
+                    <Icon name="visibility" className="text-cyan-400 text-sm" />
+                    <span className="text-[11px] text-slate-300 font-mono">
+                      {previewFile.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        addCell(previewFile.content);
+                        setPreviewFile(null);
+                      }}
+                      className="text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors"
+                    >
+                      Load in cell →
+                    </button>
+                    <button
+                      onClick={() => setPreviewFile(null)}
+                      className="text-slate-600 hover:text-white transition-colors"
+                    >
+                      <Icon name="close" className="text-sm" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      addCell(previewFile.content);
-                      setPreviewFile(null);
-                    }}
-                    className="text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors"
-                  >
-                    Load in cell →
-                  </button>
-                  <button
-                    onClick={() => setPreviewFile(null)}
-                    className="text-slate-600 hover:text-white transition-colors"
-                  >
-                    <Icon name="close" className="text-sm" />
-                  </button>
-                </div>
+                <pre className="px-4 pb-2 text-[11px] text-slate-400 font-mono max-h-40 overflow-y-auto custom-scrollbar whitespace-pre leading-relaxed">
+                  {previewFile.content}
+                </pre>
               </div>
-              <pre className="px-4 pb-2 text-[11px] text-slate-400 font-mono max-h-40 overflow-y-auto custom-scrollbar whitespace-pre leading-relaxed">
-                {previewFile.content}
-              </pre>
-            </div>
-          )}
+            )}
 
-          {/* Active project banner */}
-          {activeProject && (
-            <div className="border-b border-purple-500/10 bg-purple-500/[0.04]">
+            {/* Active project banner */}
+            {activeProject && (
+              <div className="rounded-lg border border-purple-500/10 bg-purple-500/[0.04] -mt-2 mb-3">
               <div className="flex items-center justify-between px-5 py-2">
                 <div className="flex items-center gap-3">
                   <div className="w-7 h-7 rounded-lg bg-purple-500/15 flex items-center justify-center">
@@ -565,7 +567,7 @@ function EditorInner() {
 
           {/* Modal credentials warning */}
           {hasModalCreds === false && (
-            <div className="border-b border-amber-500/10 bg-amber-500/[0.04]">
+            <div className="rounded-lg border border-amber-500/10 bg-amber-500/[0.04] mb-3">
               <div className="flex items-center justify-between px-5 py-2.5">
                 <div className="flex items-center gap-3">
                   <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center">
@@ -591,8 +593,6 @@ function EditorInner() {
             </div>
           )}
 
-          {/* Cells */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
             {/* Welcome screen when no project loaded */}
             {!activeProject && projects.length === 0 && !projectsLoading && (
               <div className="flex-1 flex items-center justify-center py-20">
