@@ -22,7 +22,7 @@ export default function LoginPage() {
     try {
       const res = await authApi.login(email, password);
       login(res.access_token, res.user);
-      router.push(res.user.role === "researcher" ? "/researcher/dashboard" : "/investor/dashboard");
+      router.push(res.user.role === "researcher" ? "/researcher/studio" : "/investor/dashboard");
     } catch (err: unknown) {
       setError((err as Error).message);
     } finally {
