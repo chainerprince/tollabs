@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Researcher Earnings &amp; Payouts Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2563eb",
+                        "primary-dark": "#1e40af",
+                        "background-light": "#f8fafc",
+                        "background-card": "#ffffff",
+                        "surface-border": "#e2e8f0",
+                        "text-main": "#0f172a",
+                        "text-muted": "#64748b",
+                        "accent-green": "#10b981",
+                        "stripe-purple": "#635bff",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-background-light text-text-main font-display min-h-screen flex flex-col overflow-hidden">
+<header class="h-16 border-b border-surface-border bg-white flex items-center justify-between px-6 shrink-0 z-20">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center text-white font-bold">
+<span class="material-icons-round text-lg">science</span>
+</div>
+<div>
+<h1 class="text-lg font-bold text-text-main leading-none">TOLLABS</h1>
+<span class="text-xs text-text-muted">Researcher Console</span>
+</div>
+</div>
+<div class="h-6 w-px bg-surface-border"></div>
+<nav class="flex gap-4 text-sm font-medium">
+<a class="text-text-main hover:text-primary transition-colors" href="#">Overview</a>
+<a class="text-primary hover:text-primary-dark transition-colors border-b-2 border-primary pb-4 -mb-4 pt-1" href="#">Earnings</a>
+<a class="text-text-muted hover:text-primary transition-colors" href="#">Models</a>
+<a class="text-text-muted hover:text-primary transition-colors" href="#">Settings</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-text-muted transition-colors relative">
+<span class="material-icons-round text-xl">notifications_none</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+</button>
+<div class="flex items-center gap-3 border-l border-surface-border pl-4">
+<div class="text-right hidden sm:block">
+<div class="text-sm font-semibold text-text-main">Dr. A. Silva</div>
+<div class="text-xs text-text-muted">Senior Researcher</div>
+</div>
+<img alt="User Profile" class="w-9 h-9 rounded-full border border-surface-border shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnTnPEYyUqi-KMSdD3UAi_l1Br0kSzbo8QwLtFxtoL_A22Nk0V05xC0VPvccSm7Y2ogftc2E2imYsmBhnIbMxDgVDTlmaX6B_pQ4_UB6maNuos390vh8kUDFnLCDGFH6Cs3s-phr7UGLFF9hxx_s59dtBKFFI8HjYF0tBIuqZCfTk8zK_dqor28P_mY6KBq8YHpvMe75s3Do_CvMhEGkLJqw6ypbKUEl-oLq38niZrGrjLnEKx0--dbMvTU2onqns-sVTwRwH20g"/>
+</div>
+</div>
+</header>
+<main class="flex-1 flex overflow-hidden">
+<section class="flex-1 overflow-y-auto p-6 lg:p-8">
+<div class="max-w-7xl mx-auto space-y-6">
+<div class="flex justify-between items-end mb-2">
+<div>
+<h2 class="text-2xl font-bold text-text-main">Earnings Dashboard</h2>
+<p class="text-text-muted text-sm mt-1">Track your model revenue and subscription payouts.</p>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 bg-white border border-surface-border rounded-lg text-sm font-medium text-text-main hover:bg-gray-50 flex items-center gap-2 shadow-sm">
+<span class="material-icons-round text-base">file_download</span>
+                            Export CSV
+                        </button>
+<button class="px-4 py-2 bg-primary hover:bg-primary-dark rounded-lg text-sm font-medium text-white shadow-sm flex items-center gap-2">
+<span class="material-icons-round text-base">add</span>
+                            New Model
+                        </button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-white p-6 rounded-xl border border-surface-border shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-blue-50 rounded-lg text-primary">
+<span class="material-icons-round text-2xl">payments</span>
+</div>
+<span class="text-xs font-medium px-2 py-1 bg-green-50 text-accent-green rounded-full flex items-center gap-1">
+<span class="material-icons-round text-xs">trending_up</span> +12.5%
+                            </span>
+</div>
+<h3 class="text-text-muted text-sm font-medium uppercase tracking-wide">Total Revenue</h3>
+<div class="mt-1 flex items-baseline gap-2">
+<span class="text-3xl font-bold text-text-main font-display">$84,230.50</span>
+<span class="text-sm text-text-muted">USD</span>
+</div>
+<p class="text-xs text-text-muted mt-2">Last 30 days vs previous period</p>
+</div>
+<div class="bg-white p-6 rounded-xl border border-surface-border shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-indigo-50 rounded-lg text-indigo-600">
+<span class="material-icons-round text-2xl">people</span>
+</div>
+<span class="text-xs font-medium px-2 py-1 bg-green-50 text-accent-green rounded-full flex items-center gap-1">
+<span class="material-icons-round text-xs">trending_up</span> +4.3%
+                            </span>
+</div>
+<h3 class="text-text-muted text-sm font-medium uppercase tracking-wide">Active Subscribers</h3>
+<div class="mt-1 flex items-baseline gap-2">
+<span class="text-3xl font-bold text-text-main font-display">1,248</span>
+<span class="text-sm text-text-muted">Users</span>
+</div>
+<p class="text-xs text-text-muted mt-2">Across 3 active models</p>
+</div>
+<div class="bg-white p-6 rounded-xl border border-surface-border shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-icons-round text-8xl text-stripe-purple">share</span>
+</div>
+<div class="flex justify-between items-start mb-4 relative z-10">
+<div class="p-2 bg-purple-50 rounded-lg text-stripe-purple">
+<span class="material-icons-round text-2xl">pie_chart</span>
+</div>
+<span class="text-xs font-medium px-2 py-1 bg-gray-100 text-text-muted rounded-full">All time</span>
+</div>
+<h3 class="text-text-muted text-sm font-medium uppercase tracking-wide relative z-10">Profit Shared</h3>
+<div class="mt-1 flex items-baseline gap-2 relative z-10">
+<span class="text-3xl font-bold text-text-main font-display">$12,450.00</span>
+</div>
+<p class="text-xs text-text-muted mt-2 relative z-10">Commission paid to TOLLABS</p>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 space-y-6">
+<div class="bg-white p-6 rounded-xl border border-surface-border shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-bold text-text-main">Performance Breakdown</h3>
+<div class="flex bg-gray-100 p-1 rounded-lg">
+<button class="px-3 py-1 text-xs font-medium bg-white rounded shadow-sm text-text-main">Revenue</button>
+<button class="px-3 py-1 text-xs font-medium text-text-muted hover:text-text-main">Subscribers</button>
+</div>
+</div>
+<div class="h-64 flex items-end justify-between gap-4 px-2">
+<div class="flex flex-col justify-between h-full py-2 text-xs text-text-muted font-mono absolute left-8 lg:left-12 -ml-8 lg:-ml-12 pointer-events-none">
+<span>$10k</span>
+<span>$7.5k</span>
+<span>$5k</span>
+<span>$2.5k</span>
+<span>0</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1 group">
+<div class="w-full flex gap-1 items-end h-full justify-center relative">
+<div class="w-3 lg:w-4 bg-primary rounded-t-sm h-[40%] group-hover:opacity-80 transition-opacity"></div> 
+<div class="w-3 lg:w-4 bg-gray-200 rounded-t-sm h-[25%] group-hover:bg-gray-300 transition-colors"></div> 
+</div>
+<span class="text-xs text-text-muted font-medium">Jan</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1 group">
+<div class="w-full flex gap-1 items-end h-full justify-center relative">
+<div class="w-3 lg:w-4 bg-primary rounded-t-sm h-[55%] group-hover:opacity-80 transition-opacity"></div>
+<div class="w-3 lg:w-4 bg-gray-200 rounded-t-sm h-[30%] group-hover:bg-gray-300 transition-colors"></div>
+</div>
+<span class="text-xs text-text-muted font-medium">Feb</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1 group">
+<div class="w-full flex gap-1 items-end h-full justify-center relative">
+<div class="w-3 lg:w-4 bg-primary rounded-t-sm h-[45%] group-hover:opacity-80 transition-opacity"></div>
+<div class="w-3 lg:w-4 bg-gray-200 rounded-t-sm h-[35%] group-hover:bg-gray-300 transition-colors"></div>
+</div>
+<span class="text-xs text-text-muted font-medium">Mar</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1 group">
+<div class="w-full flex gap-1 items-end h-full justify-center relative">
+<div class="w-3 lg:w-4 bg-primary rounded-t-sm h-[65%] group-hover:opacity-80 transition-opacity"></div>
+<div class="w-3 lg:w-4 bg-gray-200 rounded-t-sm h-[40%] group-hover:bg-gray-300 transition-colors"></div>
+</div>
+<span class="text-xs text-text-muted font-medium">Apr</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1 group">
+<div class="w-full flex gap-1 items-end h-full justify-center relative">
+<div class="w-3 lg:w-4 bg-primary rounded-t-sm h-[80%] group-hover:opacity-80 transition-opacity"></div>
+<div class="w-3 lg:w-4 bg-gray-200 rounded-t-sm h-[50%] group-hover:bg-gray-300 transition-colors"></div>
+</div>
+<span class="text-xs text-text-muted font-medium">May</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1 group">
+<div class="w-full flex gap-1 items-end h-full justify-center relative">
+<div class="w-3 lg:w-4 bg-primary rounded-t-sm h-[70%] group-hover:opacity-80 transition-opacity"></div>
+<div class="w-3 lg:w-4 bg-gray-200 rounded-t-sm h-[60%] group-hover:bg-gray-300 transition-colors"></div>
+</div>
+<span class="text-xs text-text-muted font-medium">Jun</span>
+</div>
+</div>
+<div class="mt-6 flex justify-center gap-6">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-primary"></div>
+<span class="text-xs text-text-muted font-medium">Forex Models</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-gray-200"></div>
+<span class="text-xs text-text-muted font-medium">Stock Models</span>
+</div>
+</div>
+</div>
+<div class="bg-white rounded-xl border border-surface-border shadow-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-surface-border flex justify-between items-center bg-gray-50/50">
+<h3 class="text-lg font-bold text-text-main">Recent Payouts</h3>
+<button class="text-sm text-primary font-medium hover:underline">View All</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm text-text-muted">
+<thead class="bg-gray-50 text-xs uppercase font-medium text-text-muted">
+<tr>
+<th class="px-6 py-3">Date</th>
+<th class="px-6 py-3">Transaction ID</th>
+<th class="px-6 py-3">Model</th>
+<th class="px-6 py-3">Amount</th>
+<th class="px-6 py-3">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-border">
+<tr class="hover:bg-gray-50 transition-colors">
+<td class="px-6 py-4 font-medium text-text-main">Oct 24, 2023</td>
+<td class="px-6 py-4 font-mono text-xs">tx_1Nf8...2l9</td>
+<td class="px-6 py-4">BTC-Neural-V3</td>
+<td class="px-6 py-4 font-semibold text-text-main">$1,240.50</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                    Paid
+                                                </span>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 transition-colors">
+<td class="px-6 py-4 font-medium text-text-main">Oct 22, 2023</td>
+<td class="px-6 py-4 font-mono text-xs">tx_1Nf5...8p1</td>
+<td class="px-6 py-4">Gold-Swing-AI</td>
+<td class="px-6 py-4 font-semibold text-text-main">$850.00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                    Paid
+                                                </span>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 transition-colors">
+<td class="px-6 py-4 font-medium text-text-main">Oct 20, 2023</td>
+<td class="px-6 py-4 font-mono text-xs">tx_1Ne2...5m4</td>
+<td class="px-6 py-4">Forex-Scalper-Pro</td>
+<td class="px-6 py-4 font-semibold text-text-main">$2,100.25</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                    Processing
+                                                </span>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 transition-colors">
+<td class="px-6 py-4 font-medium text-text-main">Oct 18, 2023</td>
+<td class="px-6 py-4 font-mono text-xs">tx_1Nd9...3k7</td>
+<td class="px-6 py-4">BTC-Neural-V3</td>
+<td class="px-6 py-4 font-semibold text-text-main">$920.00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                    Paid
+                                                </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<div class="bg-gradient-to-br from-[#635bff] to-[#4e45e5] rounded-xl p-6 text-white shadow-lg relative overflow-hidden">
+<div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 20px 20px;"></div>
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-4">
+<span class="font-bold text-xl tracking-tight">Stripe</span>
+<span class="bg-white/20 text-xs px-2 py-0.5 rounded font-medium">Connect</span>
+</div>
+<h3 class="text-xl font-bold mb-2">Get paid faster</h3>
+<p class="text-blue-100 text-sm mb-6">Connect your bank account to receive automated daily payouts for your model subscriptions.</p>
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-3 text-sm text-blue-50">
+<span class="material-icons-round text-base">check_circle</span>
+<span>Instant identity verification</span>
+</div>
+<div class="flex items-center gap-3 text-sm text-blue-50">
+<span class="material-icons-round text-base">check_circle</span>
+<span>Global bank transfers</span>
+</div>
+<div class="flex items-center gap-3 text-sm text-blue-50">
+<span class="material-icons-round text-base">check_circle</span>
+<span>Automated tax forms</span>
+</div>
+</div>
+<button class="mt-6 w-full py-2.5 bg-white text-[#635bff] rounded-lg font-semibold text-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 shadow-sm">
+                                    Complete Setup
+                                    <span class="material-icons-round text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+<div class="bg-white p-6 rounded-xl border border-surface-border shadow-sm">
+<h3 class="font-bold text-text-main mb-4">Top Performing Models</h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-orange-100 flex items-center justify-center text-orange-600">
+<span class="material-icons-round text-sm">currency_bitcoin</span>
+</div>
+<div>
+<div class="text-sm font-semibold text-text-main">BTC-Neural-V3</div>
+<div class="text-xs text-text-muted">Crypto</div>
+</div>
+</div>
+<div class="text-right">
+<div class="text-sm font-bold text-text-main">$42,300</div>
+<div class="text-xs text-accent-green">+12%</div>
+</div>
+</div>
+<div class="w-full bg-gray-100 rounded-full h-1.5">
+<div class="bg-orange-500 h-1.5 rounded-full" style="width: 85%"></div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-blue-100 flex items-center justify-center text-blue-600">
+<span class="material-icons-round text-sm">show_chart</span>
+</div>
+<div>
+<div class="text-sm font-semibold text-text-main">Forex-Scalper</div>
+<div class="text-xs text-text-muted">Forex</div>
+</div>
+</div>
+<div class="text-right">
+<div class="text-sm font-bold text-text-main">$28,100</div>
+<div class="text-xs text-accent-green">+8%</div>
+</div>
+</div>
+<div class="w-full bg-gray-100 rounded-full h-1.5">
+<div class="bg-blue-500 h-1.5 rounded-full" style="width: 65%"></div>
+</div>
+</div>
+</div>
+<div class="bg-white p-6 rounded-xl border border-surface-border shadow-sm">
+<h3 class="font-bold text-text-main mb-4">Payout Schedule</h3>
+<div class="flex items-start gap-4">
+<div class="flex flex-col items-center">
+<div class="w-2 h-2 bg-green-500 rounded-full mb-1"></div>
+<div class="w-0.5 h-10 bg-gray-200"></div>
+<div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+</div>
+<div>
+<div class="mb-4">
+<p class="text-sm font-medium text-text-main">Next Payout</p>
+<p class="text-xs text-text-muted">Est. Oct 28, 2023</p>
+</div>
+<div>
+<p class="text-sm font-medium text-gray-400">Following Payout</p>
+<p class="text-xs text-text-muted">Est. Nov 4, 2023</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+
+</body></html>

@@ -1,0 +1,6 @@
+{
+  "model_id": "ProsusAI/finbert",
+  "downloaded_at": "2026-02-28T18:31:11.260093+00:00",
+  "mock": true,
+  "note": "This is a placeholder. In production, actual model weights are downloaded from HuggingFace."
+}

@@ -1,0 +1,6 @@
+{
+  "model_id": "google/timesfm-1.0-200m",
+  "downloaded_at": "2026-02-28T18:28:35.504429+00:00",
+  "mock": true,
+  "note": "This is a placeholder. In production, actual model weights are downloaded from HuggingFace."
+}

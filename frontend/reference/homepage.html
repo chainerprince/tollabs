@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TOLLABS - AI Trading Infrastructure</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "toll-blue": "#2563EB",
+                        "toll-blue-dark": "#1D4ED8",
+                        "toll-blue-light": "#EFF6FF",
+                        "toll-text": "#1E293B",
+                        "toll-text-light": "#64748B",
+                        "toll-bg": "#FFFFFF",
+                        "toll-bg-alt": "#F8FAFC",
+                        "toll-accent": "#3B82F6",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'glow': '0 0 40px -10px rgba(37, 99, 235, 0.3)',
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .hero-grid {
+                background-image: 
+                    linear-gradient(rgba(37, 99, 235, 0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(37, 99, 235, 0.05) 1px, transparent 1px);
+                background-size: 50px 50px;
+                mask-image: radial-gradient(circle at center, black, transparent 80%);
+            }
+            .floating-node {
+                animation: float 6s ease-in-out infinite;
+            }
+            .floating-node-delayed {
+                animation: float 6s ease-in-out 3s infinite;
+            }
+            @keyframes float {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-20px); }
+                100% { transform: translateY(0px); }
+            }
+            .connect-line {
+                stroke-dasharray: 10;
+                animation: dash 30s linear infinite;
+            }
+            @keyframes dash {
+                to { stroke-dashoffset: 1000; }
+            }
+        }
+    </style>
+</head>
+<body class="bg-toll-bg text-toll-text font-display antialiased min-h-screen flex flex-col">
+<nav class="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 z-50">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-16">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-toll-blue rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-xl">token</span>
+</div>
+<span class="font-bold text-xl tracking-tight">TOLLABS</span>
+</div>
+<div class="hidden md:flex items-center gap-8 text-sm font-medium text-toll-text-light">
+<a class="hover:text-toll-blue transition-colors" href="#">Marketplace</a>
+<a class="hover:text-toll-blue transition-colors" href="#">Compute</a>
+<a class="hover:text-toll-blue transition-colors" href="#">Documentation</a>
+<a class="hover:text-toll-blue transition-colors" href="#">Pricing</a>
+</div>
+<div class="flex items-center gap-4">
+<a class="text-sm font-medium text-toll-text hover:text-toll-blue" href="#">Sign In</a>
+<a class="bg-toll-text text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors" href="#">Get Started</a>
+</div>
+</div>
+</div>
+</nav>
+<main class="flex-1 pt-32 pb-16 relative overflow-hidden">
+<div class="absolute inset-0 z-0 pointer-events-none">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl hero-grid"></div>
+<svg class="absolute inset-0 w-full h-full opacity-30" preserveAspectRatio="xMidYMid slice">
+<defs>
+<linearGradient id="lineGradient" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" style="stop-color:#2563EB;stop-opacity:0"></stop>
+<stop offset="50%" style="stop-color:#2563EB;stop-opacity:0.5"></stop>
+<stop offset="100%" style="stop-color:#2563EB;stop-opacity:0"></stop>
+</linearGradient>
+</defs>
+<path class="connect-line" d="M100,100 Q400,50 600,300 T1100,200" fill="none" stroke="url(#lineGradient)" stroke-width="1.5"></path>
+<path class="connect-line" d="M-50,400 Q300,300 500,600 T1200,500" fill="none" stroke="url(#lineGradient)" stroke-width="1.5" style="animation-duration: 40s"></path>
+<circle class="floating-node" cx="600" cy="300" fill="#3B82F6" r="4"></circle>
+<circle class="floating-node-delayed" cx="200" cy="500" fill="#3B82F6" r="3"></circle>
+<circle class="floating-node" cx="1000" cy="200" fill="#3B82F6" r="5"></circle>
+</svg>
+</div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-toll-blue-light border border-blue-100 text-toll-blue text-xs font-semibold uppercase tracking-wider mb-8">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+</span>
+                v2.0 Infrastructure Live
+            </div>
+<h1 class="text-5xl md:text-7xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-blue-800 to-gray-900 pb-2">
+                Quant Excellence <br class="hidden md:block"/>
+<span class="text-toll-blue font-serif italic font-normal">powered by</span> Modal.ai
+            </h1>
+<p class="text-lg md:text-xl text-toll-text-light max-w-2xl mx-auto mb-10 leading-relaxed">
+                Deploy high-frequency trading models on distributed GPUs. Backtest with institutional-grade data. Automate your strategy execution.
+            </p>
+<div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+<button class="w-full sm:w-auto px-8 py-3.5 bg-toll-blue hover:bg-toll-blue-dark text-white rounded-lg font-semibold shadow-glow hover:shadow-lg transition-all flex items-center justify-center gap-2">
+                    Start Research
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+<button class="w-full sm:w-auto px-8 py-3.5 bg-white border border-gray-200 hover:border-toll-blue text-toll-text hover:text-toll-blue rounded-lg font-semibold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 group">
+                    Explore Strategies
+                    <span class="material-symbols-outlined text-gray-400 group-hover:text-toll-blue transition-colors text-sm">candlestick_chart</span>
+</button>
+</div>
+<div class="mt-20 pt-10 border-t border-gray-100 grid grid-cols-2 md:grid-cols-4 gap-8 opacity-70">
+<div class="text-center">
+<div class="text-2xl font-bold text-gray-900">$2.4B+</div>
+<div class="text-xs font-medium text-gray-500 uppercase tracking-wide mt-1">Volume Traded</div>
+</div>
+<div class="text-center">
+<div class="text-2xl font-bold text-gray-900">12ms</div>
+<div class="text-xs font-medium text-gray-500 uppercase tracking-wide mt-1">Avg Latency</div>
+</div>
+<div class="text-center">
+<div class="text-2xl font-bold text-gray-900">500+</div>
+<div class="text-xs font-medium text-gray-500 uppercase tracking-wide mt-1">GPU Clusters</div>
+</div>
+<div class="text-center">
+<div class="text-2xl font-bold text-gray-900">99.99%</div>
+<div class="text-xs font-medium text-gray-500 uppercase tracking-wide mt-1">Uptime SLA</div>
+</div>
+</div>
+</div>
+</main>
+<section class="bg-toll-bg-alt py-24 relative overflow-hidden">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+<div class="grid md:grid-cols-3 gap-8">
+<div class="bg-white rounded-2xl p-8 border border-gray-100 shadow-soft hover:shadow-lg transition-all duration-300 group hover:-translate-y-1">
+<div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-100 transition-colors">
+<span class="material-symbols-outlined text-toll-blue text-2xl">memory</span>
+</div>
+<h3 class="text-xl font-bold text-gray-900 mb-3">Infinite Compute</h3>
+<p class="text-toll-text-light leading-relaxed text-sm mb-6">
+                        Scale your inference effortlessly. Run complex OS models on Modal GPUs with zero infrastructure overhead.
+                    </p>
+<ul class="space-y-2 mb-6">
+<li class="flex items-center gap-2 text-sm text-gray-600">
+<span class="material-symbols-outlined text-green-500 text-sm">check</span>
+                            Auto-scaling A100s
+                        </li>
+<li class="flex items-center gap-2 text-sm text-gray-600">
+<span class="material-symbols-outlined text-green-500 text-sm">check</span>
+                            Python-native deployment
+                        </li>
+</ul>
+<a class="text-toll-blue text-sm font-semibold flex items-center gap-1 group-hover:gap-2 transition-all" href="#">
+                        Learn about Compute <span class="material-symbols-outlined text-sm">arrow_right_alt</span>
+</a>
+</div>
+<div class="bg-white rounded-2xl p-8 border border-gray-100 shadow-soft hover:shadow-lg transition-all duration-300 group hover:-translate-y-1">
+<div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-100 transition-colors">
+<span class="material-symbols-outlined text-toll-blue text-2xl">history_edu</span>
+</div>
+<h3 class="text-xl font-bold text-gray-900 mb-3">Professional Backtesting</h3>
+<p class="text-toll-text-light leading-relaxed text-sm mb-6">
+                        Validate your edge before risking capital. Test strategies on years of tick-level historical Forex and Stock data.
+                    </p>
+<ul class="space-y-2 mb-6">
+<li class="flex items-center gap-2 text-sm text-gray-600">
+<span class="material-symbols-outlined text-green-500 text-sm">check</span>
+                            Tick-level granularity
+                        </li>
+<li class="flex items-center gap-2 text-sm text-gray-600">
+<span class="material-symbols-outlined text-green-500 text-sm">check</span>
+                            Slippage simulation
+                        </li>
+</ul>
+<a class="text-toll-blue text-sm font-semibold flex items-center gap-1 group-hover:gap-2 transition-all" href="#">
+                        View Data Sources <span class="material-symbols-outlined text-sm">arrow_right_alt</span>
+</a>
+</div>
+<div class="bg-white rounded-2xl p-8 border border-gray-100 shadow-soft hover:shadow-lg transition-all duration-300 group hover:-translate-y-1">
+<div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-100 transition-colors">
+<span class="material-symbols-outlined text-toll-blue text-2xl">payments</span>
+</div>
+<h3 class="text-xl font-bold text-gray-900 mb-3">Automated Payouts</h3>
+<p class="text-toll-text-light leading-relaxed text-sm mb-6">
+                        Monetize your alpha. Secure profit-sharing distribution directly to your bank account powered by Stripe Connect.
+                    </p>
+<ul class="space-y-2 mb-6">
+<li class="flex items-center gap-2 text-sm text-gray-600">
+<span class="material-symbols-outlined text-green-500 text-sm">check</span>
+                            Instant settlement
+                        </li>
+<li class="flex items-center gap-2 text-sm text-gray-600">
+<span class="material-symbols-outlined text-green-500 text-sm">check</span>
+                            Global bank support
+                        </li>
+</ul>
+<a class="text-toll-blue text-sm font-semibold flex items-center gap-1 group-hover:gap-2 transition-all" href="#">
+                        Payout Structure <span class="material-symbols-outlined text-sm">arrow_right_alt</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+<footer class="bg-white border-t border-gray-100 py-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 bg-gray-900 rounded flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-sm">token</span>
+</div>
+<span class="font-bold text-lg text-gray-900">TOLLABS</span>
+<span class="text-sm text-gray-500 ml-2">© 2024</span>
+</div>
+<div class="flex gap-6 text-sm text-gray-500">
+<a class="hover:text-gray-900" href="#">Privacy</a>
+<a class="hover:text-gray-900" href="#">Terms</a>
+<a class="hover:text-gray-900" href="#">Twitter</a>
+<a class="hover:text-gray-900" href="#">GitHub</a>
+</div>
+</div>
+</footer>
+
+</body></html>

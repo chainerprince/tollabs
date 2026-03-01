@@ -1,0 +1,1 @@
+{"mock": true, "base_model": "amazon/chronos-t5-small", "epochs": 1, "final_loss": 0.11, "timestamp": "2026-03-01T00:50:43.437967+00:00"}

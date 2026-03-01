@@ -1,0 +1,6 @@
+{
+  "model_id": "amazon/chronos-t5-small",
+  "downloaded_at": "2026-02-28T19:18:15.322174+00:00",
+  "mock": true,
+  "note": "This is a placeholder. In production, actual model weights are downloaded from HuggingFace."
+}
