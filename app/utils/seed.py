@@ -40,7 +40,7 @@ def seed():
         User(email="bob@tollabs.io", hashed_password=pwd_context.hash("password123"), role="researcher", stripe_customer_id="cus_mock_bob", balance=0.0),
     ]
     subscribers = [
-        User(email="charlie@gmail.com", hashed_password=pwd_context.hash("password123"), role="subscriber", stripe_customer_id="cus_mock_charlie", balance=10000.0),
+        User(email="charlie@tollabs.io", hashed_password=pwd_context.hash("password123"), role="subscriber", stripe_customer_id="cus_mock_charlie", balance=10000.0),
         User(email="diana@gmail.com", hashed_password=pwd_context.hash("password123"), role="subscriber", stripe_customer_id="cus_mock_diana", balance=25000.0),
         User(email="eve@gmail.com", hashed_password=pwd_context.hash("password123"), role="subscriber", stripe_customer_id="cus_mock_eve", balance=5000.0),
     ]

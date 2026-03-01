@@ -22,7 +22,7 @@ export default function LoginPage() {
     try {
       const res = await authApi.login(email, password);
       login(res.access_token, res.user);
-      router.push(res.user.role === "researcher" ? "/researcher/dashboard" : "/marketplace");
+      router.push(res.user.role === "researcher" ? "/researcher/dashboard" : "/investor/dashboard");
     } catch (err: unknown) {
       setError((err as Error).message);
     } finally {
@@ -111,6 +111,13 @@ export default function LoginPage() {
                 className="text-xs bg-slate-50 border border-slate-200 rounded px-2 py-1 hover:bg-slate-100"
               >
                 bob@tollabs.io (researcher)
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail("charlie@tollabs.io"); setPassword("password123"); }}
+                className="text-xs bg-emerald-50 border border-emerald-200 rounded px-2 py-1 hover:bg-emerald-100 text-emerald-700"
+              >
+                charlie@tollabs.io (investor)
               </button>
             </div>
           </div>

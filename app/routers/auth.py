@@ -13,7 +13,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.config import settings
 from app.database import get_db
 from app.models.user import User
-from app.schemas.user import UserCreate, UserLogin, UserResponse, TokenResponse
+from app.schemas.user import UserCreate, UserLogin, UserResponse, TokenResponse, ModalCredentials, ModalCredentialsStatus
 from app.mocks.mock_stripe import create_connected_account
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -89,7 +89,7 @@ def register(body: UserCreate, db: Session = Depends(get_db)):
     token = _create_token(user.id, user.email)
     return TokenResponse(
         access_token=token,
-        user=UserResponse.model_validate(user),
+        user=UserResponse.from_user(user),
     )
 
 
@@ -102,5 +102,46 @@ def login(body: UserLogin, db: Session = Depends(get_db)):
     token = _create_token(user.id, user.email)
     return TokenResponse(
         access_token=token,
-        user=UserResponse.model_validate(user),
+        user=UserResponse.from_user(user),
     )
+
+
+# ── Modal Credentials ────────────────────────────────────────────
+
+
+@router.put("/me/modal-credentials", response_model=ModalCredentialsStatus)
+def save_modal_credentials(
+    body: ModalCredentials,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Save researcher's Modal token ID and secret."""
+    user.modal_token_id = body.modal_token_id.strip()
+    user.modal_token_secret = body.modal_token_secret.strip()
+    db.commit()
+    preview = user.modal_token_id[:6] + "..." + user.modal_token_id[-2:] if len(user.modal_token_id) > 8 else "****"
+    return ModalCredentialsStatus(has_credentials=True, modal_token_id_preview=preview)
+
+
+@router.get("/me/modal-credentials", response_model=ModalCredentialsStatus)
+def get_modal_credentials(
+    user: User = Depends(get_current_user),
+):
+    """Check if researcher has Modal credentials stored."""
+    has = bool(user.modal_token_id and user.modal_token_secret)
+    preview = ""
+    if has and len(user.modal_token_id) > 8:
+        preview = user.modal_token_id[:6] + "..." + user.modal_token_id[-2:]
+    return ModalCredentialsStatus(has_credentials=has, modal_token_id_preview=preview)
+
+
+@router.delete("/me/modal-credentials")
+def delete_modal_credentials(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Remove researcher's Modal credentials."""
+    user.modal_token_id = None
+    user.modal_token_secret = None
+    db.commit()
+    return {"message": "Modal credentials removed"}

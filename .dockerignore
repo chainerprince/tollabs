@@ -1,0 +1,39 @@
+# ── Git ───────────────────────────────────────
+.git
+.gitignore
+
+# ── Environment / secrets ─────────────────────
+.env
+.env.example
+.env.local
+
+# ── Python ────────────────────────────────────
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+venv/
+.venv/
+.pytest_cache/
+
+# ── Database ──────────────────────────────────
+*.db
+
+# ── Node (rebuilt inside Docker) ──────────────
+frontend/node_modules
+frontend/.next
+frontend/.env.local
+frontend/reference
+
+# ── IDE / OS ──────────────────────────────────
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# ── Runtime data ──────────────────────────────
+workspaces/
+*.log
+
+# ── Docs (not needed in image) ────────────────
+*.md

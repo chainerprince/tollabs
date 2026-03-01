@@ -5,13 +5,15 @@ This module provides async wrappers around the Modal functions defined
 in modal_app.py so the training and trading services can dispatch work
 to Modal GPUs without blocking the API event loop.
 
-Requires `modal token set` or MODAL_TOKEN_ID/MODAL_TOKEN_SECRET in env.
+Uses per-user Modal credentials (stored on the User model) when available,
+falling back to the global MODAL_TOKEN_ID/MODAL_TOKEN_SECRET from .env.
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import os
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
@@ -22,6 +24,7 @@ import modal
 from app.config import settings
 from app.database import SessionLocal
 from app.models.training_job import TrainingJob
+from app.models.user import User
 
 # Re-use the same app handle defined in modal_app.py
 _APP_NAME = "tollabs-finbert"
@@ -36,6 +39,32 @@ def _read_dataset(user_id: int, filename: str) -> str:
     if not path.exists():
         raise FileNotFoundError(f"Dataset '{filename}' not found in workspace")
     return path.read_text()
+
+
+def _get_user_modal_creds(user_id: int) -> tuple[str, str] | None:
+    """Fetch the user's Modal credentials from the DB. Returns (token_id, secret) or None."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user and user.modal_token_id and user.modal_token_secret:
+            return (user.modal_token_id, user.modal_token_secret)
+        return None
+    finally:
+        db.close()
+
+
+def _set_modal_env(user_id: int | None = None):
+    """
+    Set Modal environment variables for the current thread.
+    Uses per-user creds if available, otherwise falls back to global.
+    """
+    creds = _get_user_modal_creds(user_id) if user_id else None
+    if creds:
+        os.environ["MODAL_TOKEN_ID"] = creds[0]
+        os.environ["MODAL_TOKEN_SECRET"] = creds[1]
+    elif settings.MODAL_TOKEN_ID:
+        os.environ["MODAL_TOKEN_ID"] = settings.MODAL_TOKEN_ID
+        os.environ["MODAL_TOKEN_SECRET"] = settings.MODAL_TOKEN_SECRET
 
 
 # ── Training Dispatch ─────────────────────────────────────────────
@@ -59,6 +88,9 @@ def dispatch_modal_training(
     def _run():
         db = SessionLocal()
         try:
+            # Set Modal credentials for this user
+            _set_modal_env(user_id)
+
             # Mark job as running
             job = db.query(TrainingJob).filter(TrainingJob.id == job_id).first()
             if not job:
@@ -131,6 +163,13 @@ def predict_with_model(job_id: int, texts: list[str]) -> list[dict]:
     Returns:
         List of prediction dicts with label, confidence, probabilities
     """
+    # Look up the user who owns this job to use their credentials
+    db = SessionLocal()
+    try:
+        job = db.query(TrainingJob).filter(TrainingJob.id == job_id).first()
+        _set_modal_env(job.user_id if job else None)
+    finally:
+        db.close()
     predict_fn = modal.Function.from_name(_APP_NAME, "predict_sentiment")
     return predict_fn.remote(job_id=job_id, texts=texts)
 
@@ -155,6 +194,13 @@ def get_trading_decision(
 
     Returns full trading plan with step-by-step reasoning.
     """
+    # Look up the user who owns this job to use their credentials
+    db = SessionLocal()
+    try:
+        job = db.query(TrainingJob).filter(TrainingJob.id == job_id).first()
+        _set_modal_env(job.user_id if job else None)
+    finally:
+        db.close()
     decision_fn = modal.Function.from_name(_APP_NAME, "trading_decision")
     return decision_fn.remote(
         job_id=job_id,

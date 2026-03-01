@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { training } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import { training, compute } from "@/lib/api";
 import ModelCard from "./ModelCard";
 import Icon from "@/components/ui/Icon";
 import type { BaseModelInfo } from "@/lib/types";
@@ -12,11 +13,13 @@ interface Props {
 }
 
 export default function ModelBrowser({ onSelect, selectedModelId }: Props) {
+  const router = useRouter();
   const [models, setModels] = useState<BaseModelInfo[]>([]);
   const [search, setSearch] = useState("");
   const [taskFilter, setTaskFilter] = useState<string>("");
   const [downloading, setDownloading] = useState<string | null>(null);
   const [downloadedModels, setDownloadedModels] = useState<Set<string>>(new Set());
+  const [openingInEditor, setOpeningInEditor] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -57,6 +60,25 @@ export default function ModelBrowser({ onSelect, selectedModelId }: Props) {
       setToast({ message: msg, type: "error" });
     } finally {
       setDownloading(null);
+    }
+  };
+
+  const handleOpenInEditor = async (model: BaseModelInfo) => {
+    setOpeningInEditor(model.model_id);
+    try {
+      const project = await compute.createProject({
+        model_id: model.model_id,
+        model_name: model.name,
+        task: model.task,
+        tags: model.tags,
+        parameter_count: model.parameter_count,
+        description: model.description,
+      });
+      router.push(`/compute?project=${project.slug}`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to create project";
+      setToast({ message: msg, type: "error" });
+      setOpeningInEditor(null);
     }
   };
 
@@ -136,9 +158,11 @@ export default function ModelBrowser({ onSelect, selectedModelId }: Props) {
               model={m}
               onSelect={onSelect}
               onDownload={handleDownload}
+              onOpenInEditor={handleOpenInEditor}
               downloading={downloading === m.model_id}
               downloaded={downloadedModels.has(m.model_id)}
               selected={selectedModelId === m.model_id}
+              openingInEditor={openingInEditor === m.model_id}
             />
           ))}
         </div>

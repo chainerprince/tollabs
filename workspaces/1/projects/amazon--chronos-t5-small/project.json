@@ -1,0 +1,43 @@
+{
+  "id": "d46c81cac134",
+  "slug": "amazon--chronos-t5-small",
+  "model_id": "amazon/chronos-t5-small",
+  "model_name": "Chronos T5 Small",
+  "task": "time-series-forecasting",
+  "tags": [
+    "time-series",
+    "forecasting",
+    "finance",
+    "lightweight"
+  ],
+  "parameter_count": "8M",
+  "description": "Probabilistic time-series forecasting model based on T5. Ideal for price prediction and volatility forecasting on financial data.",
+  "gpu_tier": "l4",
+  "created_at": "2026-03-01T06:14:37.414519+00:00",
+  "cells": [
+    {
+      "title": "Setup & Install",
+      "code": "# \u2500\u2500 Chronos T5 Small \u2014 Time Series Forecasting \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n# Params: 8M | Tags: time-series, forecasting, finance, lightweight\n# Probabilistic time-series forecasting model based on T5. Ideal for price prediction and volatility forecasting on financ\n\n!pip install torch transformers chronos-forecasting pandas matplotlib -q\nprint(\"\u2713 Dependencies ready\")"
+    },
+    {
+      "title": "Load Model",
+      "code": "# \u2500\u2500 Load Pre-trained Model \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nimport torch\nimport numpy as np\nimport pandas as pd\n\nMODEL_ID = \"amazon/chronos-t5-small\"\n\n# Chronos models use a special pipeline\ntry:\n    from chronos import ChronosPipeline\n    pipeline = ChronosPipeline.from_pretrained(MODEL_ID, device_map=\"auto\")\n    print(f\"\u2713 Loaded Chronos model: {MODEL_ID}\")\nexcept ImportError:\n    from transformers import AutoModelForSeq2SeqLM, AutoTokenizer\n    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)\n    model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_ID)\n    print(f\"\u2713 Loaded T5-based model: {MODEL_ID}\")\n\nprint(f\"Device: {torch.device('cuda' if torch.cuda.is_available() else 'cpu')}\")"
+    },
+    {
+      "title": "Generate Sample Data",
+      "code": "# \u2500\u2500 Generate Synthetic Market Data \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nimport numpy as np\nimport pandas as pd\n\nnp.random.seed(42)\nn = 500\ndates = pd.date_range(\"2024-01-01\", periods=n, freq=\"h\")\ntrend = np.linspace(100, 120, n)\nnoise = np.cumsum(np.random.randn(n) * 0.3)\nprices = trend + noise\n\ndf = pd.DataFrame({\"date\": dates, \"close\": prices})\ndf[\"returns\"] = df[\"close\"].pct_change()\ndf[\"volatility\"] = df[\"returns\"].rolling(20).std()\n\nprint(f\"Generated {n} hourly price bars\")\nprint(f\"Price range: ${df['close'].min():.2f} \u2014 ${df['close'].max():.2f}\")\nprint(f\"Mean return: {df['returns'].mean():.6f}\")\nprint(f\"\\n{df.tail(5).to_string(index=False)}\")"
+    },
+    {
+      "title": "Forecast",
+      "code": "# \u2500\u2500 Run Forecast \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ncontext = torch.tensor(df[\"close\"].values[-200:], dtype=torch.float32)\nprediction_length = 24  # forecast next 24 periods\n\ntry:\n    forecast = pipeline.predict(context.unsqueeze(0), prediction_length)\n    median = np.median(forecast[0].numpy(), axis=0)\n    low  = np.percentile(forecast[0].numpy(), 10, axis=0)\n    high = np.percentile(forecast[0].numpy(), 90, axis=0)\n    print(f\"Forecast ({prediction_length} steps):\")\n    print(f\"  Median: {median[:5]}...\")\n    print(f\"  80% CI: [{low[0]:.2f}, {high[0]:.2f}]\")\nexcept Exception as e:\n    print(f\"Forecast with basic approach: {e}\")\n    # Fallback: simple momentum forecast\n    last_price = df[\"close\"].iloc[-1]\n    momentum = df[\"returns\"].iloc[-20:].mean()\n    forecast_prices = [last_price * (1 + momentum) ** i for i in range(1, prediction_length + 1)]\n    print(f\"Momentum forecast: {forecast_prices[:5]}\")"
+    },
+    {
+      "title": "Evaluate Model",
+      "code": "# \u2500\u2500 Backtest Evaluation \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n# Walk-forward evaluation\nwindow = 200\nhorizon = 24\nerrors = []\n\nfor start in range(0, len(df) - window - horizon, horizon):\n    ctx = torch.tensor(df[\"close\"].values[start:start + window], dtype=torch.float32)\n    actual = df[\"close\"].values[start + window:start + window + horizon]\n    try:\n        pred = pipeline.predict(ctx.unsqueeze(0), horizon)\n        pred_median = np.median(pred[0].numpy(), axis=0)\n    except:\n        last = ctx[-1].item()\n        pred_median = np.full(horizon, last)\n    \n    mae = np.mean(np.abs(pred_median[:len(actual)] - actual))\n    errors.append(mae)\n\nprint(f\"Walk-forward MAE: {np.mean(errors):.4f}\")\nprint(f\"Evaluations: {len(errors)}\")"
+    },
+    {
+      "title": "Save & Export",
+      "code": "# \u2500\u2500 Save Results \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nimport json, os\n\nOUTPUT_DIR = \"./fine_tuned_chronos-t5-small\"\nos.makedirs(OUTPUT_DIR, exist_ok=True)\n\nresults = {\n    \"model_id\": \"amazon/chronos-t5-small\",\n    \"mae\": float(np.mean(errors)) if errors else None,\n    \"forecast_horizon\": prediction_length,\n    \"context_length\": window,\n}\n\nwith open(f\"{OUTPUT_DIR}/results.json\", \"w\") as f:\n    json.dump(results, f, indent=2)\n\nprint(f\"\u2713 Results saved to {OUTPUT_DIR}\")\nprint(\"\\nNext: Click 'Save & Publish' to backtest \u2192\")"
+    }
+  ]
+}

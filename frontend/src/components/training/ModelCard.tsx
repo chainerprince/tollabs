@@ -21,12 +21,14 @@ interface Props {
   model: BaseModelInfo;
   onSelect?: (model: BaseModelInfo) => void;
   onDownload?: (model: BaseModelInfo) => void;
+  onOpenInEditor?: (model: BaseModelInfo) => void;
   downloading?: boolean;
   downloaded?: boolean;
   selected?: boolean;
+  openingInEditor?: boolean;
 }
 
-export default function ModelCard({ model, onSelect, onDownload, downloading, downloaded, selected }: Props) {
+export default function ModelCard({ model, onSelect, onDownload, onOpenInEditor, downloading, downloaded, selected, openingInEditor }: Props) {
   const taskColor = TASK_COLORS[model.task] ?? "bg-slate-100 text-slate-600 border-slate-200";
   const taskIcon = TASK_ICONS[model.task] ?? "smart_toy";
 
@@ -80,6 +82,19 @@ export default function ModelCard({ model, onSelect, onDownload, downloading, do
           HuggingFace
         </a>
         <div className="flex-1" />
+        {onOpenInEditor && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenInEditor(model);
+            }}
+            disabled={openingInEditor}
+            className="text-[11px] px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center gap-1"
+          >
+            <Icon name={openingInEditor ? "hourglass_empty" : "code"} className="text-sm" />
+            {openingInEditor ? "Opening..." : "Open in Editor"}
+          </button>
+        )}
         {onDownload && (
           downloaded ? (
             <span className="text-[11px] px-3 py-1.5 bg-green-50 text-green-600 border border-green-200 rounded-lg font-medium flex items-center gap-1">

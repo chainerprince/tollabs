@@ -5,7 +5,13 @@ export interface User {
   email: string;
   role: "researcher" | "subscriber";
   balance: number;
+  has_modal_credentials: boolean;
   created_at: string;
+}
+
+export interface ModalCredentialsStatus {
+  has_credentials: boolean;
+  modal_token_id_preview: string;
 }
 
 export interface TokenResponse {
@@ -336,4 +342,44 @@ export interface WalletInfo {
   balance: number;
   message?: string;
   email?: string;
+}
+
+/* ── Project / Editor types ─────────────────────────────────────── */
+
+export interface ProjectCell {
+  title: string;
+  code: string;
+}
+
+export interface ProjectFile {
+  name: string;
+  size: number;
+  type: string;
+}
+
+export interface ProjectSummary {
+  id: string;
+  slug: string;
+  model_id: string;
+  model_name: string;
+  task: string;
+  tags: string[];
+  parameter_count: string;
+  gpu_tier: string;
+  created_at: string;
+  file_count: number;
+}
+
+export interface ProjectDetail extends ProjectSummary {
+  description: string;
+  cells: ProjectCell[];
+  files: ProjectFile[];
+}
+
+export interface GpuTier {
+  id: string;
+  name: string;
+  vram: string;
+  price_hr: number;
+  desc: string;
 }

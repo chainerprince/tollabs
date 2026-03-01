@@ -1,5 +1,5 @@
 """
-Compute router — notebook-style code execution + file management.
+Compute router — notebook-style code execution + file management + projects.
 """
 
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
@@ -9,6 +9,7 @@ from app.routers.auth import get_current_user
 from app.models.user import User
 from app.services import compute_service
 from app.services import file_service
+from app.services import project_service
 
 router = APIRouter(prefix="/compute", tags=["Compute"])
 
@@ -88,3 +89,105 @@ def delete_file(filename: str, user: User = Depends(get_current_user)):
     if not ok:
         raise HTTPException(status_code=404, detail="File not found")
     return {"message": f"Deleted {filename}"}
+
+
+# ── Projects ──────────────────────────────────────────────────────
+
+class CreateProjectRequest(BaseModel):
+    model_id: str
+    model_name: str
+    task: str
+    tags: list[str] = []
+    parameter_count: str = ""
+    description: str = ""
+
+
+class CreateProjectFromCodeRequest(BaseModel):
+    name: str
+    code: str
+    description: str = ""
+
+
+@router.post("/projects")
+def create_project(body: CreateProjectRequest, user: User = Depends(get_current_user)):
+    """Create a new research project from a HuggingFace model."""
+    project = project_service.create_project(
+        user_id=user.id,
+        model_id=body.model_id,
+        model_name=body.model_name,
+        task=body.task,
+        tags=body.tags,
+        parameter_count=body.parameter_count,
+        description=body.description,
+    )
+    return project
+
+
+@router.post("/projects/from-code")
+def create_project_from_code(body: CreateProjectFromCodeRequest, user: User = Depends(get_current_user)):
+    """Create a project from raw strategy code (Studio → Editor)."""
+    project = project_service.create_project_from_code(
+        user_id=user.id,
+        name=body.name,
+        code=body.code,
+        description=body.description,
+    )
+    return project
+
+
+@router.get("/projects")
+def list_projects(user: User = Depends(get_current_user)):
+    """List all research projects."""
+    return project_service.list_projects(user.id)
+
+
+@router.get("/projects/{slug}")
+def get_project(slug: str, user: User = Depends(get_current_user)):
+    """Get project details with files and cells."""
+    project = project_service.get_project(user.id, slug)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return project
+
+
+@router.get("/projects/{slug}/files/{filename}")
+def get_project_file(slug: str, filename: str, user: User = Depends(get_current_user)):
+    """Read a file from a project."""
+    content = project_service.get_project_file(user.id, slug, filename)
+    if content is None:
+        raise HTTPException(status_code=404, detail="File not found")
+    return {"filename": filename, "content": content}
+
+
+class UpdateGpuRequest(BaseModel):
+    gpu_tier: str
+
+
+@router.put("/projects/{slug}/gpu")
+def update_project_gpu(slug: str, body: UpdateGpuRequest, user: User = Depends(get_current_user)):
+    """Update the selected GPU tier for a project."""
+    ok = project_service.update_gpu_tier(user.id, slug, body.gpu_tier)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return {"message": "GPU tier updated", "gpu_tier": body.gpu_tier}
+
+
+class SaveCellsRequest(BaseModel):
+    cells: list[dict]
+
+
+@router.put("/projects/{slug}/cells")
+def save_project_cells(slug: str, body: SaveCellsRequest, user: User = Depends(get_current_user)):
+    """Save updated notebook cells."""
+    ok = project_service.save_project_cells(user.id, slug, body.cells)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return {"message": "Cells saved"}
+
+
+# ── GPU Tiers ─────────────────────────────────────────────────────
+
+@router.get("/gpu-tiers")
+def list_gpu_tiers(user: User = Depends(get_current_user)):
+    """List available GPU tiers and pricing."""
+    return project_service.GPU_TIERS

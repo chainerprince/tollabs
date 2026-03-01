@@ -1,0 +1,21 @@
+{
+  "id": "e32cb99a1a90",
+  "slug": "amazon_chronos-t5-small_finetuned",
+  "model_id": "",
+  "model_name": "amazon_chronos-t5-small_finetuned",
+  "task": "strategy",
+  "tags": [
+    "studio",
+    "strategy"
+  ],
+  "parameter_count": "",
+  "description": "Strategy created in Studio (model mode)",
+  "gpu_tier": "t4",
+  "created_at": "2026-03-01T06:39:56.113977+00:00",
+  "cells": [
+    {
+      "title": "Strategy",
+      "code": "# Using fine-tuned model: amazon_chronos-t5-small_finetuned.pt\nimport json, pathlib\nmodel_path = pathlib.Path(\"models/amazon_chronos-t5-small_finetuned.pt\")\nmodel_config = json.loads(model_path.read_text())\n\n# Strategy using the fine-tuned model predictions\ndef on_tick(tick):\n    # sentiment = model.predict(tick.headline)\n    # if sentiment > 0.7: buy()\n    # if sentiment < 0.3: sell()\n    pass\n"
+    }
+  ]
+}

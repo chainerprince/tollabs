@@ -9,24 +9,32 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      # Store DB in the persistent volume
+      DATABASE_URL: sqlite:///./data/tollabs.db
+      CORS_ORIGINS: "http://localhost:3000"
     volumes:
-      - db-data:/app
+      - tollabs-data:/app/data
+      - tollabs-workspaces:/app/workspaces
     healthcheck:
-      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/marketplace/stats')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 10s
-      retries: 3
+      retries: 5
+      start_period: 15s
 
   frontend:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      args:
+        # Browser calls backend on exposed host port
+        NEXT_PUBLIC_API_URL: http://localhost:8000
     ports:
       - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000
     depends_on:
       backend:
         condition: service_started
 
 volumes:
-  db-data:
+  tollabs-data:
+  tollabs-workspaces:

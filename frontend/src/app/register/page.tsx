@@ -23,7 +23,7 @@ export default function RegisterPage() {
     try {
       const res = await authApi.register(email, password, role);
       login(res.access_token, res.user);
-      router.push(role === "researcher" ? "/researcher/dashboard" : "/marketplace");
+      router.push(role === "researcher" ? "/researcher/dashboard" : "/investor/dashboard");
     } catch (err: unknown) {
       setError((err as Error).message);
     } finally {

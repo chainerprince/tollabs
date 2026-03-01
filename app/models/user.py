@@ -16,4 +16,6 @@ class User(Base):
     role = Column(String, nullable=False, default="subscriber")  # "researcher" | "subscriber"
     stripe_customer_id = Column(String, nullable=True)
     balance = Column(Float, default=0.0)
+    modal_token_id = Column(String, nullable=True)
+    modal_token_secret = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

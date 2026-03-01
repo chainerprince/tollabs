@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
 
+    # ── CORS ──────────────────────────────────────────────────
+    CORS_ORIGINS: str = "*"  # comma-separated list, or "*" for dev
+
     # ── Profit-sharing defaults ───────────────────────────────
     DEFAULT_RESEARCHER_SHARE: float = 0.20   # 20 %
     PLATFORM_COMMISSION: float = 0.10        # 10 %
@@ -33,6 +36,8 @@ class Settings(BaseSettings):
     # ── Modal (production) ────────────────────────────────────
     MODAL_APP_NAME: str = "tollabs-compute"
     MODAL_VOLUME_NAME: str = "tollabs-financial-data"
+    MODAL_TOKEN_ID: str = ""
+    MODAL_TOKEN_SECRET: str = ""
 
     model_config = {"env_file": ".env"}
 

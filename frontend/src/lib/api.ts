@@ -54,6 +54,20 @@ export const auth = {
       body: JSON.stringify({ email, password }),
     });
   },
+  saveModalCredentials(modalTokenId: string, modalTokenSecret: string) {
+    return request<import('./types').ModalCredentialsStatus>("/auth/me/modal-credentials", {
+      method: "PUT",
+      body: JSON.stringify({ modal_token_id: modalTokenId, modal_token_secret: modalTokenSecret }),
+    });
+  },
+  getModalCredentials() {
+    return request<import('./types').ModalCredentialsStatus>("/auth/me/modal-credentials");
+  },
+  deleteModalCredentials() {
+    return request<{ message: string }>("/auth/me/modal-credentials", {
+      method: "DELETE",
+    });
+  },
 };
 
 /* ── Marketplace ──────────────────────────────────────────────── */
@@ -196,6 +210,53 @@ export const compute = {
       `/compute/files/${encodeURIComponent(filename)}`,
       { method: "DELETE" }
     );
+  },
+
+  /* ── Projects ───────────────────────────── */
+  createProject(data: {
+    model_id: string;
+    model_name: string;
+    task: string;
+    tags?: string[];
+    parameter_count?: string;
+    description?: string;
+  }) {
+    return request<import('./types').ProjectDetail>('/compute/projects', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  createProjectFromCode(data: { name: string; code: string; description?: string }) {
+    return request<import('./types').ProjectDetail>('/compute/projects/from-code', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  listProjects() {
+    return request<import('./types').ProjectSummary[]>('/compute/projects');
+  },
+  getProject(slug: string) {
+    return request<import('./types').ProjectDetail>(`/compute/projects/${encodeURIComponent(slug)}`);
+  },
+  getProjectFile(slug: string, filename: string) {
+    return request<{ filename: string; content: string }>(
+      `/compute/projects/${encodeURIComponent(slug)}/files/${encodeURIComponent(filename)}`
+    );
+  },
+  updateGpu(slug: string, gpuTier: string) {
+    return request<{ message: string }>(`/compute/projects/${encodeURIComponent(slug)}/gpu`, {
+      method: 'PUT',
+      body: JSON.stringify({ gpu_tier: gpuTier }),
+    });
+  },
+  saveCells(slug: string, cells: import('./types').ProjectCell[]) {
+    return request<{ message: string }>(`/compute/projects/${encodeURIComponent(slug)}/cells`, {
+      method: 'PUT',
+      body: JSON.stringify({ cells }),
+    });
+  },
+  gpuTiers() {
+    return request<import('./types').GpuTier[]>('/compute/gpu-tiers');
   },
 };
 

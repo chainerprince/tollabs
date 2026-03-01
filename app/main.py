@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.config import settings
 from app.database import init_db
 from app.routers import auth, marketplace, subscription, researcher, compute, backtest, ai, training
 from app.routers.admin import router as admin_router
@@ -27,10 +28,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# ── CORS (allow everything for local dev) ─────────────────────────
+# ── CORS ──────────────────────────────────────────────────────────
+_origins = (
+    ["*"] if settings.CORS_ORIGINS == "*"
+    else [o.strip() for o in settings.CORS_ORIGINS.split(",")]
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
