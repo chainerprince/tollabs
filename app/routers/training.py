@@ -119,3 +119,55 @@ def seed_demo_dataset(user=Depends(get_current_user)):
 def list_artifacts(user=Depends(get_current_user)):
     """List all fine-tuned model artifacts in the user's workspace."""
     return training_service.list_user_artifacts(user.id)
+
+
+# ── HuggingFace Model Search ──────────────────────────────────
+
+@router.get("/hf-search")
+def search_huggingface(
+    q: str = "financial sentiment",
+    task: str = "text-classification",
+    limit: int = 20,
+    user=Depends(get_current_user),
+):
+    """
+    Search HuggingFace Hub for open-source models.
+    Falls back to a curated list if the API is unreachable.
+    """
+    import httpx
+
+    try:
+        resp = httpx.get(
+            "https://huggingface.co/api/models",
+            params={"search": q, "pipeline_tag": task, "limit": limit, "sort": "downloads"},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        models = resp.json()
+        return [
+            {
+                "model_id": m.get("modelId", m.get("id", "")),
+                "name": m.get("modelId", m.get("id", "")).split("/")[-1],
+                "description": "",
+                "downloads": m.get("downloads", 0),
+                "likes": m.get("likes", 0),
+                "pipeline_tag": m.get("pipeline_tag", ""),
+                "tags": m.get("tags", [])[:6],
+            }
+            for m in models
+        ]
+    except Exception:
+        # Fallback to curated models
+        curated = training_service.list_base_models()
+        return [
+            {
+                "model_id": m["model_id"],
+                "name": m["name"],
+                "description": m.get("description", ""),
+                "downloads": 0,
+                "likes": 0,
+                "pipeline_tag": m.get("task", ""),
+                "tags": m.get("tags", []),
+            }
+            for m in curated
+        ]

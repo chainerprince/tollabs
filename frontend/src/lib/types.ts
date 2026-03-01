@@ -6,6 +6,9 @@ export interface User {
   role: "researcher" | "subscriber";
   balance: number;
   created_at: string;
+  has_modal_credentials?: boolean;
+  has_hf_token?: boolean;
+  modal_app_name?: string | null;
 }
 
 export interface TokenResponse {
@@ -25,6 +28,11 @@ export interface TradingModel {
   performance_metadata: PerformanceMetadata;
   subscriber_count?: number;
   created_at: string;
+  training_job_id?: number;
+  deployment_id?: number;
+  backtest_metrics?: Record<string, unknown>;
+  backtest_asset?: string;
+  backtest_periods?: number;
 }
 
 export interface PerformanceMetadata {
@@ -336,4 +344,111 @@ export interface WalletInfo {
   balance: number;
   message?: string;
   email?: string;
+}
+
+/* ── Deployment / Credential types ───────────────────────────── */
+
+export interface CredentialsStatus {
+  has_modal_credentials: boolean;
+  has_hf_token: boolean;
+  modal_app_name: string | null;
+  modal_token_id_preview: string | null;
+}
+
+export interface ModelDeployment {
+  id: number;
+  researcher_id: number;
+  training_job_id: number;
+  name: string;
+  modal_app_name: string | null;
+  status: string;
+  version: string;
+  base_model: string;
+  model_metrics: Record<string, unknown>;
+  total_inferences: number;
+  total_trades_powered: number;
+  created_at: string;
+}
+
+export interface DeploymentListItem {
+  id: number;
+  name: string;
+  training_job_id: number;
+  base_model: string;
+  status: string;
+  total_inferences: number;
+  total_trades_powered: number;
+  created_at: string;
+}
+
+export interface HFModelResult {
+  model_id: string;
+  name: string;
+  description: string;
+  downloads: number;
+  likes: number;
+  pipeline_tag: string;
+  tags: string[];
+}
+
+export interface MultiTradeResult {
+  total_trades: number;
+  completed: number;
+  failed: number;
+  total_pnl: number;
+  total_pnl_pct: number;
+  capital_per_trade: number;
+  total_capital_deployed: number;
+  trades: Array<{
+    trade_id?: number;
+    batch_index: number;
+    status: string;
+    direction?: string;
+    pnl?: number;
+    pnl_pct?: number;
+    signal?: string;
+    confidence?: number;
+    entry_price?: number;
+    exit_price?: number;
+    error?: string;
+  }>;
+}
+
+export interface GPUTier {
+  id: string;
+  name: string;
+  vram: string;
+  cost_hr: string;
+  best_for: string;
+}
+
+export interface PriceBar {
+  timestamp: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface TradeSignal {
+  type: "buy" | "sell";
+  price: number;
+  time: string;
+}
+
+export interface BacktestModelResult {
+  job_id: string;
+  training_job_id: number;
+  asset: string;
+  periods: number;
+  metrics: PerformanceMetadata;
+  trades: Array<Record<string, unknown>>;
+  prices: PriceBar[];
+  signals: TradeSignal[];
+  prices_summary: {
+    count: number;
+    first: Record<string, unknown> | null;
+    last: Record<string, unknown> | null;
+  };
 }

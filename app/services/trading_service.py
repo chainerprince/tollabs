@@ -16,16 +16,27 @@ from app.models.user import User
 from app.mocks import mock_trading, mock_stripe
 
 
-def _get_deployed_model_job_id(db: Session, model) -> int | None:
+def _get_deployed_model_job_id(db: Session, model) -> tuple[int | None, int | None, int | None]:
     """
-    Find the latest completed training job for this model's creator.
+    Find the deployment info for a TradingModel.
 
-    This links a TradingModel to a deployed fine-tuned model on Modal
-    by finding the most recent successful training job from the same researcher.
+    Returns (training_job_id, deployment_id, researcher_id).
+    First checks for a linked ModelDeployment, then falls back to the
+    latest completed training job from the same researcher.
     """
+    from app.models.deployment import ModelDeployment
     from app.models.training_job import TrainingJob
 
-    # Look for completed training jobs from this model's creator
+    # 1. Direct deployment link
+    if model.deployment_id:
+        dep = db.query(ModelDeployment).filter(
+            ModelDeployment.id == model.deployment_id,
+            ModelDeployment.status == "active",
+        ).first()
+        if dep:
+            return dep.training_job_id, dep.id, dep.researcher_id
+
+    # 2. Fallback: latest completed training job from the creator
     job = (
         db.query(TrainingJob)
         .filter(
@@ -36,7 +47,7 @@ def _get_deployed_model_job_id(db: Session, model) -> int | None:
         .order_by(TrainingJob.completed_at.desc())
         .first()
     )
-    return job.id if job else None
+    return (job.id, None, model.creator_id) if job else (None, None, None)
 
 
 def fund_wallet(db: Session, user_id: int, amount: float) -> dict:
@@ -198,7 +209,7 @@ def execute_trade(db: Session, trade_id: int, user_id: int) -> Trade:
     db.commit()
 
     # Check if model has a deployed Modal model (from a completed training job)
-    deployed_job_id = _get_deployed_model_job_id(db, model)
+    deployed_job_id, deployment_id, researcher_id = _get_deployed_model_job_id(db, model)
 
     if deployed_job_id and not settings.USE_MOCK_TRADING:
         # ── Real Modal Multi-Step Trading ─────────────────────
@@ -221,6 +232,7 @@ def execute_trade(db: Session, trade_id: int, user_id: int) -> Trade:
                 price_data=price_data,
                 capital=trade.capital,
                 asset=model.asset_class,
+                researcher_id=researcher_id,
             )
         except Exception as e:
             # Fallback to mock if Modal inference fails
@@ -416,3 +428,75 @@ def get_profit_sharing_details(db: Session, user_id: int) -> list[dict]:
         })
 
     return details
+
+
+# ── Multi-Trade Execution ─────────────────────────────────────────
+
+def execute_multi_trade(
+    db: Session,
+    user_id: int,
+    subscription_id: int,
+    capital_per_trade: float,
+    num_trades: int = 5,
+) -> dict:
+    """
+    Execute multiple trades in sequence using the AI model.
+
+    Each trade gets fresh market data and an independent AI decision,
+    simulating a real multi-trade session where the model continuously
+    analyzes new information and makes decisions.
+    """
+    results = []
+    total_pnl = 0.0
+    completed = 0
+    failed = 0
+
+    for i in range(num_trades):
+        try:
+            trade = create_trade(
+                db=db,
+                user_id=user_id,
+                subscription_id=subscription_id,
+                capital=capital_per_trade,
+                modifications=f"Multi-trade batch #{i + 1} of {num_trades}",
+            )
+
+            result = execute_trade(db, trade.id, user_id)
+
+            results.append({
+                "trade_id": result.id,
+                "batch_index": i + 1,
+                "status": result.status,
+                "direction": result.direction,
+                "pnl": result.pnl,
+                "pnl_pct": result.pnl_pct,
+                "signal": (result.execution_details or {}).get("signal", "N/A"),
+                "confidence": (result.execution_details or {}).get("confidence", 0),
+                "entry_price": result.entry_price,
+                "exit_price": result.exit_price,
+            })
+
+            total_pnl += result.pnl
+            completed += 1
+
+        except Exception as e:
+            results.append({
+                "batch_index": i + 1,
+                "status": "failed",
+                "error": str(e),
+            })
+            failed += 1
+
+    total_capital = capital_per_trade * num_trades
+    total_pnl_pct = (total_pnl / total_capital * 100) if total_capital > 0 else 0
+
+    return {
+        "total_trades": num_trades,
+        "completed": completed,
+        "failed": failed,
+        "total_pnl": round(total_pnl, 2),
+        "total_pnl_pct": round(total_pnl_pct, 2),
+        "capital_per_trade": capital_per_trade,
+        "total_capital_deployed": total_capital,
+        "trades": results,
+    }

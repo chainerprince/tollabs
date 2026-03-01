@@ -20,11 +20,10 @@ const subscriberLinks: SidebarLink[] = [
 ];
 
 const researcherLinks: SidebarLink[] = [
-  { href: "/researcher/dashboard", icon: "science", label: "Backtest" },
-  { href: "/researcher/training", icon: "model_training", label: "Training" },
+  { href: "/researcher/studio", icon: "labs", label: "Studio" },
   { href: "/marketplace", icon: "storefront", label: "Marketplace" },
   { href: "/researcher/earnings", icon: "payments", label: "Earnings" },
-  { href: "/compute", icon: "terminal", label: "Compute" },
+  { href: "/compute", icon: "code", label: "Editor" },
 ];
 
 export default function Sidebar() {

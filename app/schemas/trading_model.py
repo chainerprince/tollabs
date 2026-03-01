@@ -20,6 +20,9 @@ class TradingModelResponse(BaseModel):
     asset_class: str
     status: str
     performance_metadata: dict[str, Any]
+    backtest_metrics: dict[str, Any] = {}
+    backtest_asset: str | None = None
+    backtest_periods: int | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

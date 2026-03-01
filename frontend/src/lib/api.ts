@@ -39,6 +39,13 @@ import type {
   PlatformStats,
   Transaction,
   SimulateCycleResult,
+  CredentialsStatus,
+  ModelDeployment,
+  DeploymentListItem,
+  HFModelResult,
+  MultiTradeResult,
+  GPUTier,
+  BacktestModelResult,
 } from "./types";
 
 export const auth = {
@@ -121,6 +128,116 @@ export const researcher = {
   },
   getTransactions() {
     return request<Transaction[]>("/researcher/transactions");
+  },
+
+  // ── Credentials ────────────────────────────────────────
+  getCredentials() {
+    return request<CredentialsStatus>("/researcher/credentials");
+  },
+  setModalCredentials(tokenId: string, tokenSecret: string) {
+    return request<{ message: string; modal_app_name: string }>("/researcher/credentials/modal", {
+      method: "POST",
+      body: JSON.stringify({ modal_token_id: tokenId, modal_token_secret: tokenSecret }),
+    });
+  },
+  setHFToken(token: string) {
+    return request<{ message: string }>("/researcher/credentials/huggingface", {
+      method: "POST",
+      body: JSON.stringify({ hf_token: token }),
+    });
+  },
+  removeModalCredentials() {
+    return request<{ message: string }>("/researcher/credentials/modal", { method: "DELETE" });
+  },
+
+  // ── Deployments ────────────────────────────────────────
+  deployTrainedModel(trainingJobId: number, name: string) {
+    return request<ModelDeployment>("/researcher/deployments", {
+      method: "POST",
+      body: JSON.stringify({ training_job_id: trainingJobId, name }),
+    });
+  },
+  listDeployments() {
+    return request<DeploymentListItem[]>("/researcher/deployments");
+  },
+  getDeployment(id: number) {
+    return request<ModelDeployment>(`/researcher/deployments/${id}`);
+  },
+  stopDeployment(id: number) {
+    return request<{ message: string }>(`/researcher/deployments/${id}/stop`, { method: "POST" });
+  },
+
+  // ── Marketplace publish ────────────────────────────────
+  publishToMarketplace(deploymentId: number, name: string, description?: string, assetClass?: string) {
+    return request<TradingModel>("/researcher/deployments/publish", {
+      method: "POST",
+      body: JSON.stringify({
+        deployment_id: deploymentId,
+        name,
+        description: description ?? "",
+        asset_class: assetClass ?? "stock",
+      }),
+    });
+  },
+  // ── GPU Tiers ───────────────────────────────────
+  getGPUTiers() {
+    return request<GPUTier[]>("/researcher/gpu-tiers");
+  },
+
+  // ── Dataset upload ──────────────────────────────
+  uploadDataset(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const token = typeof window !== "undefined" ? localStorage.getItem("tollabs_token") : null;
+    return fetch(`${BASE}/researcher/upload-dataset`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    }).then(async (r) => {
+      if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
+      return r.json() as Promise<{ message: string; filename: string; size: number; rows: number }>;
+    });
+  },
+
+  // ── Backtest a trained model ────────────────────
+  backtestModel(trainingJobId: number, asset: string, periods: number) {
+    return request<BacktestModelResult>("/researcher/backtest-model", {
+      method: "POST",
+      body: JSON.stringify({ training_job_id: trainingJobId, asset, periods }),
+    });
+  },
+
+  // ── Submit to marketplace (final step) ───────────
+  submitToMarketplace(data: {
+    training_job_id: number;
+    deployment_id?: number;
+    name: string;
+    description: string;
+    asset_class: string;
+    backtest_metrics: Record<string, unknown>;
+    backtest_asset: string;
+    backtest_periods: number;
+  }) {
+    return request<TradingModel>("/researcher/submit-to-marketplace", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  // ── Demo profitable strategy backtest ────────────
+  backtestDemo(asset: string, periods: number) {
+    return request<BacktestModelResult>("/researcher/backtest-demo", {
+      method: "POST",
+      body: JSON.stringify({ asset, periods }),
+    });
+  },
+
+  // ── AI suggestion for unprofitable strategies ────
+  aiSuggest(metrics: Record<string, unknown>, asset: string, periods: number) {
+    return request<{ suggestion: string }>("/researcher/ai-suggest", {
+      method: "POST",
+      body: JSON.stringify({ metrics, asset, periods }),
+    });
   },
 };
 
@@ -299,6 +416,11 @@ export const training = {
       { method: "POST" },
     );
   },
+  searchHuggingFace(q: string, task = "text-classification", limit = 20) {
+    return request<HFModelResult[]>(
+      `/training/hf-search?q=${encodeURIComponent(q)}&task=${encodeURIComponent(task)}&limit=${limit}`
+    );
+  },
 };
 
 /* ── Trading (Subscriber) ─────────────────────────────────────── */
@@ -352,5 +474,11 @@ export const trading = {
   },
   getProfitSharing() {
     return request<ProfitSharingDetail[]>("/trading/profit-sharing");
+  },
+  executeMultiTrade(subscriptionId: number, capitalPerTrade: number, numTrades: number) {
+    return request<MultiTradeResult>("/trading/trades/multi", {
+      method: "POST",
+      body: JSON.stringify({ subscription_id: subscriptionId, capital_per_trade: capitalPerTrade, num_trades: numTrades }),
+    });
   },
 };

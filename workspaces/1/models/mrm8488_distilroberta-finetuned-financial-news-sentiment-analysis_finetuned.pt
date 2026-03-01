@@ -1,0 +1,1 @@
+{"mock": true, "base_model": "mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis", "epochs": 3, "final_loss": 0.1185, "timestamp": "2026-03-01T04:15:45.962004+00:00"}

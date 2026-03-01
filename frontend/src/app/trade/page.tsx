@@ -10,9 +10,10 @@ import TradeConfigurator from "@/components/trading/TradeConfigurator";
 import TradeSummaryCard from "@/components/trading/TradeSummaryCard";
 import TradeResultCard from "@/components/trading/TradeResultCard";
 import ProfitSharingPanel from "@/components/trading/ProfitSharingPanel";
+import MultiTradePanel from "@/components/trading/MultiTradePanel";
 import type { Subscription, TradingModel, TradeSummary, TradeRecord2 } from "@/lib/types";
 
-type Step = "agent" | "configure" | "summary" | "result" | "sharing";
+type Step = "agent" | "configure" | "summary" | "result" | "sharing" | "multi";
 
 function TradingPortalInner() {
   const { user } = useAuth();
@@ -198,11 +199,11 @@ function TradingPortalInner() {
 
           {/* Step navigation */}
           <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
-            {(["agent", "configure", "sharing"] as Step[]).map((s) => (
+            {(["agent", "configure", "multi", "sharing"] as Step[]).map((s) => (
               <button
                 key={s}
                 onClick={() => {
-                  if (s === "agent" || s === "configure" || s === "sharing") setStep(s);
+                  if (s === "agent" || s === "configure" || s === "sharing" || s === "multi") setStep(s);
                 }}
                 className={`px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors ${
                   step === s
@@ -210,7 +211,7 @@ function TradingPortalInner() {
                     : "text-slate-500 hover:text-slate-700"
                 }`}
               >
-                {s === "agent" ? "💬 Agent" : s === "configure" ? "⚙️ Trade" : "📊 Sharing"}
+                {s === "agent" ? "💬 Agent" : s === "configure" ? "⚙️ Trade" : s === "multi" ? "🚀 Multi" : "📊 Sharing"}
               </button>
             ))}
           </div>
@@ -285,6 +286,15 @@ function TradingPortalInner() {
 
             {/* Step: Profit sharing */}
             {step === "sharing" && <ProfitSharingPanel />}
+
+            {/* Step: Multi-trade */}
+            {step === "multi" && (
+              <MultiTradePanel
+                subscriptionId={sub.id}
+                modelName={model.name}
+                walletBalance={balance}
+              />
+            )}
 
             {/* Step: Agent (show hint to navigate) */}
             {step === "agent" && (

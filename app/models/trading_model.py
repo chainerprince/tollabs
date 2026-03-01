@@ -19,3 +19,12 @@ class TradingModel(Base):
     performance_metadata = Column(JSON, default=dict)  # {sharpe, max_drawdown, total_return, win_rate}
     status = Column(String, default="draft")  # "draft" | "live" | "archived"
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # ── Links to deployment infrastructure ────────────────────
+    training_job_id = Column(Integer, ForeignKey("training_jobs.id"), nullable=True)
+    deployment_id = Column(Integer, ForeignKey("model_deployments.id"), nullable=True)
+
+    # ── Backtest results (shown on marketplace) ───────────────
+    backtest_metrics = Column(JSON, default=dict)  # {sharpe, max_dd, total_return, win_rate, equity_curve, trades}
+    backtest_asset = Column(String, nullable=True)
+    backtest_periods = Column(Integer, nullable=True)

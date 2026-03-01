@@ -234,3 +234,37 @@ def get_profit_sharing(
 ):
     """Get profit sharing breakdown for all completed trades."""
     return trading_service.get_profit_sharing_details(db, user.id)
+
+
+# ── Multi-Trade Execution ───────────────────────────────────────
+
+@router.post("/trades/multi")
+def execute_multi_trade(
+    body: dict,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Execute multiple trades in sequence using the AI model.
+    Body: {subscription_id, capital_per_trade, num_trades (1-20)}
+    """
+    subscription_id = body.get("subscription_id")
+    capital_per_trade = body.get("capital_per_trade", 1000)
+    num_trades = min(body.get("num_trades", 5), 20)
+
+    if not subscription_id:
+        raise HTTPException(status_code=400, detail="subscription_id is required")
+    if capital_per_trade <= 0:
+        raise HTTPException(status_code=400, detail="capital_per_trade must be positive")
+
+    try:
+        result = trading_service.execute_multi_trade(
+            db=db,
+            user_id=user.id,
+            subscription_id=subscription_id,
+            capital_per_trade=capital_per_trade,
+            num_trades=num_trades,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result

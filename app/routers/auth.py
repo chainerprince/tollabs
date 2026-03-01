@@ -89,7 +89,7 @@ def register(body: UserCreate, db: Session = Depends(get_db)):
     token = _create_token(user.id, user.email)
     return TokenResponse(
         access_token=token,
-        user=UserResponse.model_validate(user),
+        user=UserResponse.from_user(user),
     )
 
 
@@ -102,5 +102,5 @@ def login(body: UserLogin, db: Session = Depends(get_db)):
     token = _create_token(user.id, user.email)
     return TokenResponse(
         access_token=token,
-        user=UserResponse.model_validate(user),
+        user=UserResponse.from_user(user),
     )

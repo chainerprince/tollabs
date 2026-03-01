@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy import Column, Integer, String, Text, Float, DateTime
 
 from app.database import Base
 
@@ -17,3 +17,9 @@ class User(Base):
     stripe_customer_id = Column(String, nullable=True)
     balance = Column(Float, default=0.0)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # ── Researcher credentials (BYOK) ─────────────────────────
+    modal_token_id = Column(String, nullable=True)
+    modal_token_secret = Column(String, nullable=True)
+    modal_app_name = Column(String, nullable=True)
+    hf_token = Column(String, nullable=True)

@@ -93,7 +93,7 @@ export default function ModelCard({ model, onSubscribe, onViewDetails, isSubscri
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <p className="text-xs text-toll-text-light mb-0.5">Win Rate</p>
           <p className="text-base font-bold text-slate-800">{winRate.toFixed(0)}%</p>
@@ -103,6 +103,37 @@ export default function ModelCard({ model, onSubscribe, onViewDetails, isSubscri
           <p className="text-base font-bold text-slate-800">{subscriberCount}</p>
         </div>
       </div>
+
+      {/* Backtest Metrics (shown when model has backtest data) */}
+      {model.backtest_metrics && Object.keys(model.backtest_metrics).length > 0 && (
+        <div className="mb-4 p-3 bg-emerald-50 border border-emerald-100 rounded-lg">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Icon name="verified" className="text-sm text-emerald-600" />
+            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">Backtest Verified</span>
+            {model.backtest_asset && (
+              <span className="text-[9px] text-emerald-600 ml-auto">{model.backtest_asset} · {model.backtest_periods ?? 0} periods</span>
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div>
+              <p className={`text-sm font-bold ${((model.backtest_metrics.sharpe_ratio as number) ?? 0) > 0.5 ? "text-emerald-700" : "text-slate-600"}`}>
+                {((model.backtest_metrics.sharpe_ratio as number) ?? 0).toFixed(2)}
+              </p>
+              <p className="text-[9px] text-emerald-600 uppercase">Sharpe</p>
+            </div>
+            <div>
+              <p className={`text-sm font-bold ${((model.backtest_metrics.max_drawdown_pct as number) ?? 0) > -15 ? "text-emerald-700" : "text-red-500"}`}>
+                {((model.backtest_metrics.max_drawdown_pct as number) ?? 0).toFixed(1)}%
+              </p>
+              <p className="text-[9px] text-emerald-600 uppercase">Max DD</p>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-emerald-700">{(model.backtest_metrics.num_trades as number) ?? 0}</p>
+              <p className="text-[9px] text-emerald-600 uppercase">Trades</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="border-t border-slate-100 pt-4 flex items-center justify-between">
