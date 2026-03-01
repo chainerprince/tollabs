@@ -1,5 +1,5 @@
 """
-Modal.ai App definition for TOLLABS compute engine.
+Modal.com App definition for TOLLABS compute engine.
 
 Deploy with:  modal deploy modal_engine/app.py
 Serve (dev):  modal serve modal_engine/app.py

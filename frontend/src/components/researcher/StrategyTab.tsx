@@ -204,7 +204,7 @@ export default function StrategyTab({ strategyCode, asset, periods }: StrategyTa
           <Icon name="arrow_forward" className="text-sm" />
         </button>
         <p className="text-[10px] text-slate-400 text-center mt-2">
-          Opens the compute environment with GPU acceleration on Modal.ai
+          Opens the compute environment with GPU acceleration on Modal.com
         </p>
       </section>
     </div>

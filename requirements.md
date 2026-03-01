@@ -229,7 +229,7 @@ tollabs/
 
 ---
 
-## 8. Modal.ai Integration (Production Path)
+## 8. Modal.com Integration (Production Path)
 
 When ready to move beyond mocks, the `modal_engine/` module provides real Modal integration:
 
@@ -282,7 +282,7 @@ def fetch_market_data():
 | Database        | SQLite                        |
 | Validation      | Pydantic v2                   |
 | Auth            | Simple JWT (PyJWT)            |
-| Compute         | Modal.ai (mocked locally)     |
+| Compute         | Modal.com      |
 | Payments        | Stripe Connect (mocked)       |
 | Testing         | pytest + httpx                |
 

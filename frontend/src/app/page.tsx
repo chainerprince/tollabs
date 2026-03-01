@@ -42,7 +42,7 @@ export default function HomePage() {
 
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-blue-800 to-gray-900 pb-2">
             Quant Excellence <br className="hidden md:block" />
-            <span className="text-toll-blue font-serif italic font-normal">powered by</span> Modal.ai
+            <span className="text-toll-blue font-serif italic font-normal">powered by</span> Modal.com
           </h1>
 
           <p className="text-lg md:text-xl text-toll-text-light max-w-2xl mx-auto mb-10 leading-relaxed">
