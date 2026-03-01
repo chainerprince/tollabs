@@ -14,3 +14,13 @@ modal>=0.70.0
 numpy>=1.26.0
 google-generativeai>=0.8.0
 huggingface-hub>=0.20.0
+
+# Data science (needed for code editor cell execution)
+pandas>=2.0.0
+scipy>=1.11.0
+scikit-learn>=1.3.0
+matplotlib>=3.8.0
+seaborn>=0.13.0
+yfinance>=0.2.30
+ta>=0.11.0
+requests>=2.31.0

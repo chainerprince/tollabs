@@ -24,8 +24,19 @@ class RunCellRequest(BaseModel):
 @router.post("/run-cell")
 def run_cell(body: RunCellRequest, user: User = Depends(get_current_user)):
     """Execute a Python code cell with access to the user's workspace files."""
-    result = compute_service.run_cell(body.code, body.session_id, user_id=user.id)
-    return result
+    try:
+        result = compute_service.run_cell(body.code, body.session_id, user_id=user.id)
+        return result
+    except Exception as e:
+        # Never let an unhandled crash prevent the user from seeing output
+        return {
+            "session_id": body.session_id,
+            "stdout": "",
+            "stderr": "",
+            "result": None,
+            "error": f"Server error: {e}",
+            "variables": [],
+        }
 
 
 @router.post("/reset-session")

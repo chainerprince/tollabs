@@ -1,5 +1,5 @@
 {
-  "id": "d46c81cac134",
+  "id": "3e6e5a5f7e20",
   "slug": "amazon--chronos-t5-small",
   "model_id": "amazon/chronos-t5-small",
   "model_name": "Chronos T5 Small",
@@ -12,8 +12,8 @@
   ],
   "parameter_count": "8M",
   "description": "Probabilistic time-series forecasting model based on T5. Ideal for price prediction and volatility forecasting on financial data.",
-  "gpu_tier": "l4",
-  "created_at": "2026-03-01T06:14:37.414519+00:00",
+  "gpu_tier": "t4",
+  "created_at": "2026-03-01T12:01:56.483582+00:00",
   "cells": [
     {
       "title": "Setup & Install",

@@ -1,5 +1,5 @@
 {
-  "id": "801040c9e495",
+  "id": "0895c88aeead",
   "slug": "amazon_chronos-t5-small_finetuned",
   "model_id": "",
   "model_name": "amazon_chronos-t5-small_finetuned",
@@ -11,7 +11,7 @@
   "parameter_count": "",
   "description": "Strategy created in Studio (model mode)",
   "gpu_tier": "cpu",
-  "created_at": "2026-03-01T10:33:10.450428+00:00",
+  "created_at": "2026-03-01T12:01:36.915414+00:00",
   "cells": [
     {
       "title": "Strategy",
