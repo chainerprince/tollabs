@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { training, compute } from "@/lib/api";
 import Icon from "@/components/ui/Icon";
 import type { BaseModelInfo, WorkspaceFile } from "@/lib/types";
@@ -23,11 +23,17 @@ export default function TrainingForm({ selectedModel, onSubmit }: Props) {
   const [loraRank, setLoraRank] = useState(8);
 
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const refreshFiles = () => {
+    compute.listFiles().then((r) => setFiles(r.files)).catch(() => {});
+  };
 
   useEffect(() => {
-    compute.listFiles().then((r) => setFiles(r.files)).catch(() => {});
+    refreshFiles();
   }, []);
 
   useEffect(() => {
@@ -42,6 +48,31 @@ export default function TrainingForm({ selectedModel, onSubmit }: Props) {
   const dataFiles = files.filter(
     (f) => f.name.endsWith(".csv") || f.name.endsWith(".json") || f.name.endsWith(".jsonl"),
   );
+
+  const handleFileUpload = async (file: File) => {
+    const validExts = [".csv", ".json", ".jsonl"];
+    if (!validExts.some((ext) => file.name.toLowerCase().endsWith(ext))) {
+      setError("Only .csv, .json, and .jsonl files are supported");
+      return;
+    }
+    setUploading(true);
+    setError("");
+    try {
+      const res = await compute.uploadFile(file);
+      refreshFiles();
+      setDataset(res.file.name);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileUpload(file);
+  };
 
   const handleSubmit = async () => {
     setError("");
@@ -119,8 +150,47 @@ export default function TrainingForm({ selectedModel, onSubmit }: Props) {
       <div>
         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
           Dataset File
-          <span className="text-slate-400 font-normal ml-1">(upload via Compute → File Manager)</span>
         </label>
+
+        {/* Upload zone */}
+        <div
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`mb-3 flex flex-col items-center justify-center gap-2 py-4 px-4 rounded-lg border-2 border-dashed cursor-pointer transition-all ${
+            uploading
+              ? "border-toll-blue bg-toll-blue-light"
+              : "border-slate-300 hover:border-toll-blue hover:bg-slate-50"
+          }`}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.json,.jsonl"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleFileUpload(file);
+              e.target.value = "";
+            }}
+          />
+          {uploading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-toll-blue border-t-transparent rounded-full animate-spin" />
+              <p className="text-xs text-toll-blue font-medium">Uploading...</p>
+            </>
+          ) : (
+            <>
+              <Icon name="cloud_upload" className="text-2xl text-slate-400" />
+              <p className="text-xs text-slate-500">
+                <span className="text-toll-blue font-medium">Click to upload</span> or drag &amp; drop
+              </p>
+              <p className="text-[10px] text-slate-400">CSV, JSON, or JSONL</p>
+            </>
+          )}
+        </div>
+
+        {/* File list */}
         {dataFiles.length > 0 ? (
           <div className="space-y-1.5 max-h-40 overflow-y-auto">
             {dataFiles.map((f) => (
@@ -151,12 +221,11 @@ export default function TrainingForm({ selectedModel, onSubmit }: Props) {
             ))}
           </div>
         ) : (
-          <div className="text-center py-6 bg-slate-50 rounded-lg border border-dashed border-slate-300">
-            <Icon name="cloud_upload" className="text-3xl text-slate-300 mb-2" />
-            <p className="text-xs text-slate-400">
-              No data files found. Upload a CSV or JSON file via the Compute page first.
+          !uploading && (
+            <p className="text-[11px] text-slate-400 text-center">
+              No dataset files yet. Upload one above.
             </p>
-          </div>
+          )
         )}
       </div>
 
